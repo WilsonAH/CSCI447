@@ -3,10 +3,14 @@ public class MultilayerNetwork {
 	
 	private Layer layers[];
 	
-	public MultilayerNetwork(int layerCount, int[] nodeCounts){
+	public MultilayerNetwork(int layerCount, int[] nodeCounts, int inputCount, boolean useLogisticFunction){
 		layers = new Layer[layerCount];
 		for(int loop = 0; loop < layers.length; loop++){
-			layers[loop] = new Layer(nodeCounts[loop]);
+			if(loop == layers.length-1){
+				layers[loop] = new Layer(nodeCounts[loop], inputCount, true, useLogisticFunction);
+			}else{
+				layers[loop] = new Layer(nodeCounts[loop], inputCount, false, useLogisticFunction);
+			}
 		}
 	}
 	
@@ -15,8 +19,11 @@ public class MultilayerNetwork {
 		
 	}
 	
-	//Needs Work
 	public double getOutput(double inputs[]){
-		return 0;
+		double[] outputs = inputs;
+		for(int loop = 0; loop < layers.length; loop++){
+			outputs = layers[loop].getOutputs(outputs);
+		}
+		return outputs[0];
 	}
 }
