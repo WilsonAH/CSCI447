@@ -13,7 +13,7 @@ public abstract class Node {
 		initWeights(inputCount);
 	}
 	
-	protected void initWeights(int inputCount){
+	private void initWeights(int inputCount){
 		weights = new double[inputCount+1]; //InputCount + 1 to include bias weight
 		Random numberGenerator = new Random();
 		for(int loop = 0; loop < weights.length;loop++){

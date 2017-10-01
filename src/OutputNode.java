@@ -5,7 +5,6 @@ public class OutputNode extends Node{
 	
 	public OutputNode(int inputCount) {
 		super(inputCount);
-		initWeights(inputCount);
 	}
 
 	//Needs Work

@@ -6,7 +6,6 @@ public class HiddenNode extends Node{
 	public HiddenNode(int inputCount, boolean useLogisticFunciton) {
 		super(inputCount);
 		this.useLogisticFunciton = useLogisticFunciton;
-		initWeights(inputCount);
 	}
 	
 	public double getOutput(double inputs[]){
