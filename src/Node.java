@@ -2,43 +2,33 @@ import java.util.Random;
 
 public abstract class Node {
 	
-	private double weights[];
+	public double weights[];
+	public int id;
 	
-	private static final int MIN_RAND_WEIGHT = 1;  //Will divide by 100 so it is 0.01
-	private static final int MAX_RAND_WEIGHT = 50; // Will divide by 100 so it is 0.5
-	private static final double LEARNING_RATE = 0.25;
-	private static final double BIAS = 0.01;
+	private static final int MIN_RAND_WEIGHT = 1;  //Will divide by 1000 so it is 0.001
+	private static final int MAX_RAND_WEIGHT = 5; // Will divide by 1000 so it is 0.005
+	protected double LEARNING_RATE;
 	
-	public Node(int inputCount){
+	public Node(int inputCount, double learningRate, int id){
 		initWeights(inputCount);
+		this.LEARNING_RATE=learningRate;
+		this.id=id;
 	}
 	
-	private void initWeights(int inputCount){
-		weights = new double[inputCount+1]; //InputCount + 1 to include bias weight
+	private void initWeights(int outputCount){
+		weights = new double[outputCount];
 		Random numberGenerator = new Random();
 		for(int loop = 0; loop < weights.length;loop++){
-			weights[loop] = ((double)numberGenerator.nextInt((MAX_RAND_WEIGHT-MIN_RAND_WEIGHT)+1)+MIN_RAND_WEIGHT)/100.0;
-			System.out.println(weights[loop]);
+			weights[loop] = ((double)numberGenerator.nextInt((MAX_RAND_WEIGHT-MIN_RAND_WEIGHT)+1)+MIN_RAND_WEIGHT)/10000.0;
 		}
 	}
 	
-	protected double sumInputsTimesWeights(double inputs[]){
+	protected double sumInputs(double inputs[]){
 		double sum = 0;
 		for(int position = 0; position<inputs.length; position++){
-			sum += inputs[position]*weights[position];
+			sum += inputs[position];
 		}
-		return sum+BIAS;
-	}
-	
-	public abstract double getOutput(double inputs[]);
-	
-	protected abstract double calculateError(double inputs[], double expected);
-	
-	
-	public void updateWeights(double inputs[], double error){
-		for(int loop = 0; loop < weights.length; loop++){
-			weights[loop] = weights[loop]*inputs[loop]*error*LEARNING_RATE;
-		}
+		return sum;
 	}
 	
 	public String toString(){
