@@ -77,8 +77,8 @@ someArbitraryRadius = scanIt();
     
 	}
 
-	
-	//helper methods for fetch;
+
+//helper methods for fetch;
 	//to shorten up javas god-aweful "print"
 private static String print ( String x ) {
 	System.out.println( x );
