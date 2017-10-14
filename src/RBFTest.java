@@ -52,10 +52,10 @@ public class RBFTest {
 
 	}
 	
-	@Test
-	public void testGausFunction() {
+//	@Test
+//	public void testGausFunction() {
 		
-	}
+//	}
 	
 	
 }
