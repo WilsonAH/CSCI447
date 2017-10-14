@@ -52,4 +52,10 @@ public class RBFTest {
 
 	}
 	
+	@Test
+	public void testGausFunction() {
+		
+	}
+	
+	
 }
