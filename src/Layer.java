@@ -9,7 +9,6 @@ public class Layer {
 	private Node[] nodes;
 	public double[] inputs;
 	public double[] outputs;
-	public double[] gradients;
 	public double[] errors;
 	
 	
@@ -17,7 +16,7 @@ public class Layer {
 		nodes = new Node[nodeCount];
 		errors = new double[nodeCount];
 		outputs = new double[nodeCount];
-		gradients = new double[nodeCount];
+		
 		this.nodeCount = nodeCount;
 		this.outputCount = outputCount;
 		this.isHiddenLayer = isHiddenLayer;
@@ -25,18 +24,24 @@ public class Layer {
 		this.id = id;
 		for(int loop = 0; loop < nodes.length; loop++){
 			if(isHiddenLayer){
-				nodes[loop] = new HiddenNode(outputCount,useLogisticFunction,momentum,learningRate,loop);
+				nodes[loop] = new HiddenNode(outputCount,momentum,learningRate,loop);
 			}else{
-				nodes[loop] = new OutputNode(outputCount,learningRate,loop);
+				nodes[loop] = new OutputNode(outputCount,useLogisticFunction,learningRate,loop);
 			}
 		}
 	}
 	
 	
-	public void updateWeights(double[] errorsOfLayerToRight, double[] gradientsOfLayerToRight){
+	public void updateWeights(double[] errorsDownstream){
+		//System.out.println("Layer: "+this.id);
 		for(int node = 0;node < nodes.length; node++){
-			HiddenNode hn = (HiddenNode)nodes[node];//Will only be called for hidden layers
-			hn.updateWeights(errorsOfLayerToRight,gradientsOfLayerToRight,inputs[node]);
+			HiddenNode hn = (HiddenNode)nodes[node];
+			hn.updateWeights(errorsDownstream, inputs[node]);
+			/*if(this.id==0){
+				for(int weight = 0;weight<hn.weights.length;weight++){
+					hn.weights[weight] = 1;
+				}
+			}*/
 		}
 	}
 	
@@ -46,10 +51,13 @@ public class Layer {
 			HiddenNode hn = (HiddenNode)nodes[node];
 			double sum = 0;
 			for(int nextLayerNode = 0; nextLayerNode < errorsOfLayerToRight.length;nextLayerNode++){
-				sum+=errorsOfLayerToRight[nextLayerNode]*this.nodes[node].weights[nextLayerNode];
+				sum+=errorsOfLayerToRight[nextLayerNode]*hn.weights[nextLayerNode];
 			}
-			errors[node] = sum*gradients[node];
-			//System.out.println("Layer "+this.id+" node "+node+" error: "+errors[node]+"   \tinput: "+inputs[node]);
+			//System.out.println(errors.length+" "+outputs.length);
+			errors[node] = sum*outputs[node]*(1-outputs[node]);
+			for(int weight = 0; weight < hn.weights.length;weight++){
+				//System.out.println("Layer "+this.id+" node "+node+" error: "+errors[node]+"   \tinput: "+inputs[node]+"   \tweight "+weight+": "+hn.weights[weight]);
+			}
 		}
 		return errors;
 	}
@@ -59,7 +67,6 @@ public class Layer {
 		for(int node = 0;node < nodes.length; node++){
 			OutputNode on = (OutputNode) nodes[node];
 			errors[node] = on.getError(expected, output[node]);
-			gradients[node] = on.calculateGradient(expected, output[node],inputs[node]);
 		}
 		return errors;
 	}
@@ -76,11 +83,16 @@ public class Layer {
 		}else{
 			for(int node = 0; node < nodes.length;node++){
 				OutputNode on = (OutputNode)nodes[node];
-				outputs[node] = on.getOutputs(inputs[node])+BIAS;
+				if(on.useLogisticFunciton){
+					outputs[node] = on.logisticActivationOutput(inputs[node])+(BIAS/100);
+					this.outputs[node] = on.logisticActivationOutput(inputs[node]);
+				}else{
+					outputs[node] = on.getOutputs(inputs[node])+BIAS;
+					this.outputs[node] = on.getOutputs(inputs[node]);
+				}
+				
 			}
 		}
-		
-		this.outputs = outputs;
 		return outputs;
 	}
 	
@@ -88,8 +100,15 @@ public class Layer {
 		double sum = 0;
 		for(int node = 0;node < nodes.length; node++){
 			HiddenNode hn = (HiddenNode)nodes[node];//Will only be called for hidden layers
-			gradients[node] = hn.calculateGradient(hn.logisticActivationFunction(inputs[node]));
-			sum +=  hn.weights[receivingNode]*hn.logisticActivationFunction(inputs[node]);
+			if(this.id==0){
+				outputs[node] = inputs[node];
+			}else{
+				outputs[node] = hn.logisticActivationFunction(inputs[node]);
+			}
+			//System.out.println(this.id+"   "+hn.weights[receivingNode]+"   "+outputs[node]+"   "+inputs[node]);
+			
+			sum +=  hn.weights[receivingNode]*outputs[node];
+			this.outputs[node] = sum;
 		}
 		return sum;
 	}

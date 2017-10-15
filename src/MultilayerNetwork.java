@@ -1,4 +1,9 @@
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.geom.GeneralPath;
 import java.util.Random;
+
+import javax.swing.JFrame;
 
 public class MultilayerNetwork {
 	
@@ -7,6 +12,8 @@ public class MultilayerNetwork {
 	private int maxDomain;
 	private int minDomain;
 	private int inputVectors;
+	
+	public double[] points;
 	
 	
 	public MultilayerNetwork(int layerCount, int[] nodeCounts, double momentum, int dimensions, int maxDomain, int minDomain, double bias, double learningRate, int inputVectors, boolean useLogisticFunction){
@@ -23,31 +30,49 @@ public class MultilayerNetwork {
 			}
 		}
 
-		/*double errorSum = 0;
+		double errorSum = 0;
+		boolean lastRun = false;
 		for(int loop = 0; loop<10; loop++){
-			errorSum+=fiveByTwoCrossValidation();
+			if(loop==9){
+				lastRun=true;
+			}
+			errorSum+=fiveByTwoCrossValidation(lastRun);
 		}
 		double finalErrorPercent = (errorSum/10);
 		System.out.printf("Error: %.2f", finalErrorPercent);
-		System.out.println("%");*/
-		singleTest();
+		System.out.println("%");
+		//singleTest();
 	}
 	
 	private void singleTest(){
 		double[][] inputs = generateInputs();
-		for(int i = 0; i < 10000; i++){
-			System.out.println("Iteration: "+i);
-			train(inputs);
-			try {
-				Thread.sleep(3000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+		points = new double[1000];
+		for(int i = 0; i < 1000; i++){
+			//System.out.println("Iteration: "+i);
+			double[] outputs = train(inputs);
+			double totalErrorSum = 0;
+			for(int output = 0;output < inputs.length;output++){
+				totalErrorSum+=outputs[output];
 			}
+			totalErrorSum /= inputs.length;
+			points[i] = totalErrorSum;
+			//System.out.println(points[i]);
+			//try {
+			//	Thread.sleep(3000);
+			//} catch (InterruptedException e) {
+			//	e.printStackTrace();
+			//}
 		}
+		
+		JFrame f = new JFrame();
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        f.add(new graphPlotter(points));
+        f.setSize(400,400);
+        f.setLocation(200,200);
+        f.setVisible(true);
 	}
 	
-	private double fiveByTwoCrossValidation(){
+	private double fiveByTwoCrossValidation(boolean lastRun){
 		double[][] inputs = generateInputs();
 		double sumErrors = 0;
 		for(int loop = 0; loop < 5; loop++){
@@ -61,11 +86,19 @@ public class MultilayerNetwork {
 					secondHalfInputs[input-(inputVectors/2)] = inputs[input];
 				}
 			}
-			train(firstHalfInputs);
+			points = train(firstHalfInputs);
+			if(loop == 4 && lastRun){
+				JFrame f = new JFrame();
+		        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		        f.add(new graphPlotter(points));
+		        f.setSize(400,400);
+		        f.setLocation(200,200);
+		        f.setVisible(true);
+			}
 			double error = test(secondHalfInputs);
 			train(secondHalfInputs);
 			error += test(firstHalfInputs);
-			error = error/2;
+			error /= 2;
 			sumErrors+=error;
 		}
 		double totalError = sumErrors/5;
@@ -73,17 +106,26 @@ public class MultilayerNetwork {
 	}
 	
 	
-	private void train(double[][] inputs){
+	private double[] train(double[][] inputs){
+		//double totalErrorSum = 0;
+		double[] graphPoints = new double[inputs.length];
 		for(int i = 0; i<inputs.length; i++){
 			double[] input = inputs[i];
 			double[] outputs = this.getOutputs(input);
 			double expected = rosenbrockFunction(input);
 			setErrors(expected, outputs);
 			this.updateWeights();
-			
+			double errorSum = 0;
+			for(int output = 0; output<outputs.length;output++){
+				errorSum+= Math.abs(expected-outputs[output]);
+			}
+			graphPoints[i] = errorSum/outputs.length;
 			System.out.println("Output: "+outputs[0]);
-			System.out.println("Expected: "+expected+"\n");
+			System.out.println("Expected: "+expected+"");
+			System.out.println("Error: "+graphPoints[i]+"\n");
 		}
+		//totalErrorSum /= inputs.length;
+		return graphPoints;
 	} 
 	
 	private double test(double[][] inputs){
@@ -94,7 +136,7 @@ public class MultilayerNetwork {
 			double expected = rosenbrockFunction(input);
 			double percentErrorSum = 0;
 			for(int output = 0;output<outputs.length;output++){
-				percentErrorSum+=(Math.abs((expected-outputs[output])/expected))*100;
+				percentErrorSum+=Math.abs(expected-outputs[output]);//percentErrorSum+=(Math.abs((expected-outputs[output])/expected))*100;
 			}
 			double averageError = percentErrorSum/outputs.length;
 			totalErrorSum +=averageError;
@@ -121,8 +163,11 @@ public class MultilayerNetwork {
     }
 	
 	private double rosenbrockFunction(double[] inputs){
-		double expected = Math.pow((1-inputs[0]),2)+100*Math.pow((inputs[1]-Math.pow(inputs[0], 2)),2);
-		return expected;
+		double sum = 0;
+		for(int i = 0; i < dimensions-1;i++){
+			sum += Math.pow((1-inputs[i]),2)+100*Math.pow((inputs[i+1]-Math.pow(inputs[i], 2)),2);
+		}
+		return sum;
 	}
 	
 	private double[][] generateInputs(){
@@ -153,7 +198,7 @@ public class MultilayerNetwork {
 	
 	private void updateWeights(){
 		for(int layer = 0;layer<layers.length-1;layer++){
-			this.layers[layer].updateWeights(layers[layer+1].errors,layers[layer+1].gradients);
+			this.layers[layer].updateWeights(layers[layer+1].errors);
 		}
 	}
 }

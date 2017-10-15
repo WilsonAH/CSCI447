@@ -14,11 +14,10 @@ public class Project2Application {
 		if(args.length>1){
 			try{//Try catch to protect String to Int parsing.
 				int layerCount = Integer.parseInt(args[0]);
-				int nodeCounts[] = new int[args.length-3];
-				for(int position = 1; position<args.length-8; position++){
+				int nodeCounts[] = new int[layerCount];
+				for(int position = 1; position<layerCount+1; position++){
 					nodeCounts[position-1]=Integer.parseInt(args[position]);
 				}
-				int nodeCount = Integer.parseInt(args[1]);
 				double momentum = Double.parseDouble(args[args.length-8]);
 				int dimensions = Integer.parseInt(args[args.length-7]);
 				int maxDomain = Integer.parseInt(args[args.length-6]);
@@ -27,6 +26,7 @@ public class Project2Application {
 				double learningRate = Double.parseDouble(args[args.length-3]);
 				int inputVectors = Integer.parseInt(args[args.length-2]);
 				boolean useLogisticFunction = Boolean.parseBoolean(args[args.length-1].trim());
+				//layers, nodeCount1, nodeCount2, nodeCount3, momentum, dimensionsOfInputVector, maxDomain, minDomain, bias, learningRate, inputVectors, usesLogisticFunction
 				multiNetwork = new MultilayerNetwork(layerCount,nodeCounts,momentum,dimensions,maxDomain,minDomain,bias,learningRate,inputVectors,useLogisticFunction);
 			}catch(Exception e){
 				e.printStackTrace();
@@ -51,7 +51,7 @@ public class Project2Application {
 		}
 		//If no arguments are passed in, then the program will ask for input.
 		else{
-			System.out.println("Where are those arguments at?");
+			System.exit(0);
 		}
 		
 		
