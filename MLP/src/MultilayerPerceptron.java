@@ -9,6 +9,7 @@ public class MultilayerPerceptron{
 	private double[] points; //Array of error over iterations to be graphed using graph()
 	private int pointCounter = 0; //Pointer to the position in points[] that is the first empty slot
 	private double lastError = 0;
+	private double momentum;
 	
 	private double learningrate; //Rate at which weights are adjusted
 	private Layer[] layers;
@@ -20,8 +21,9 @@ public class MultilayerPerceptron{
 	 * @param learningrate 	learning rate
 	 * @param inputVectors	number of values to be trained on
 	 */
-	public MultilayerPerceptron(int[] nodeCounts, double learningrate, int inputVectors, boolean useLinearOutputActivation){
+	public MultilayerPerceptron(int[] nodeCounts, double learningrate, double momentum, int inputVectors, boolean useLinearOutputActivation){
  		this.learningrate = learningrate;
+ 		this.momentum = momentum;
  		points = new double[inputVectors];
  		
  		//Creates an array of Layers. Each layer has an array of nodes
@@ -46,91 +48,66 @@ public class MultilayerPerceptron{
 	private void backpropagate(double[] input, double expected){
 		//Gets an output based on the input passed in
 		double[] output = classify(input);
-		double[] error = new double[output.length];
-		//Passes Output error to hidden layer
+		//Sets output error
 		for(int n = 0; n < layers[layers.length-1].nodes.length;n++){
 			Node node = layers[layers.length-1].nodes[n];
-			error[n] = node.getSenesteOutput()*(1-node.getSenesteOutput())*(expected-node.getSenesteOutput());
+			node.setDelta(expected-output[n]);
 		}
 		
-		//Adds the error to the points array for graphing
-		points[pointCounter] = Math.abs(error[0]);
+		points[pointCounter] = Math.abs(expected-output[0]);
 		pointCounter++;
 		
-		//Updates weights between output layer to hidden layer
-		for(Node node : layers[layers.length-2].nodes){
-			for(int s = 0; s < node.getSynapses().length;s++){
-				Synapse synapse = node.getSynapses()[s];
-				double weight = synapse.getWeight();
-				//Change in w = learningRate*ErrorOfNodeGoingTo*OutputOfNodeComingFrom
-				synapse.setWeight(weight+learningrate*error[s]*node.getSenesteOutput());
-			}
-		}
-		
-		//Copies error[] to outputErrors to reuse error for each layer
-		double[] outputErrors = error.clone();
-		
-		//Passes hidden error to other hidden layers.
-		for(int l = this.layers.length-2;l>0;l--){
+		//Adds the error to the points array for graphing
+		for(int l = layers.length-2; l >=0; l--){
 			Layer layer = layers[l];
-			error = new double[layer.nodes.length];
-			
-			//Iterates through each node in the layer
+			Layer forwardLayer = layers[l+1];
 			for(int n = 0; n < layer.nodes.length; n++){
 				Node node = layer.nodes[n];
-				
-				//Delta of a node = nodeOutput*(1-nodeOutput)
-				double delta = node.getSenesteOutput()*(1-node.getSenesteOutput());
-				
-				//Adds all of the errors downstream times the weights connecting them.
 				double sumError = 0;
-				for(int s = 0; s < node.getSynapses().length;s++){
-					Synapse synapse = node.getSynapses()[s];
-					if(l == this.layers.length-2){//if(the layer is connected to the output layer)
-						sumError += outputErrors[s]*synapse.getWeight();
-					}else{
-						sumError += error[s]*synapse.getWeight();
-					}
+				for(int forwardN = 0;forwardN < forwardLayer.nodes.length; forwardN++){
+					Node forwardNode = forwardLayer.nodes[forwardN];
+					sumError+=forwardNode.getDelta()*node.getSynapses()[forwardN].getWeight();
 				}
-				//Error of node = errorsDownstream * deltaOfNode;
-				error[n] = sumError*delta;
+				node.setDelta(sumError * node.getSenesteOutput()*(1 - node.getSenesteOutput()));
 			}
-			
-			//Updates weights
-			Layer backLayer = layers[l-1];
-			for(int n = 0; n < backLayer.nodes.length;n++){
-				Node node = backLayer.nodes[n];
+		}
+		
+		//Sets partial derivatives on each weight
+		for(int l = 0; l <layers.length; l++){
+			Layer layer = layers[l];
+			for(int n = 0; n <layer.nodes.length;n++){
+				Node node = layer.nodes[n];
 				for(int s = 0; s < node.getSynapses().length;s++){
 					Synapse synapse = node.getSynapses()[s];
-					double weight = synapse.getWeight();
-					synapse.setWeight(weight+this.learningrate*error[s]*node.getSenesteOutput());
+					synapse.addPartial(synapse.getToNode().getDelta() * node.getSenesteOutput());
+					/*double weightChange = learningrate*synapse.getPartial()+synapse.getLastChange()*this.momentum;
+					synapse.setWeight(synapse.getWeight()+weightChange);
+					synapse.setLastChange(weightChange);*/
 				}
 			}
 		}
 		
-		//Passes hidden error to input layer.
-		double[] inputErrors = error.clone();
-		for(int n = 0; n < layers[1].nodes.length;n++){
-			Node node = layers[1].nodes[n];
-			double delta = node.getSenesteOutput()*(1.0-node.getSenesteOutput());
-			double sumError = 0;
-			for(int s = 0; s < node.getSynapses().length;s++){
-				Synapse synapse = node.getSynapses()[s];
-				sumError+=sumError+synapse.getWeight()*outputErrors[s];
-			}
-			inputErrors[n] = sumError*delta;
-		}
+		//Gradient Descent
 		
-		//Updates weights
-		for(int n = 0; n < layers[0].nodes.length;n++){
-			Node node = layers[0].nodes[n];
-			for(int s = 0; s < node.getSynapses().length;s++){
-				Synapse synapse = node.getSynapses()[s];
-				double weight = synapse.getWeight();
-				synapse.setWeight(weight+this.learningrate*inputErrors[s]*node.getSenesteOutput());
+		/*
+		}*/
+	}
+	
+	public void gradientDescent(){
+		for(int l = 0; l <layers.length; l++){
+			Layer layer = layers[l];
+			for(int n = 0; n <layer.nodes.length;n++){
+				Node node = layer.nodes[n];
+				for(int s = 0; s < node.getSynapses().length;s++){
+					Synapse synapse = node.getSynapses()[s];
+					double weightChange = learningrate*synapse.getAveragePartial()+synapse.getLastChange()*this.momentum;
+					synapse.setWeight(synapse.getWeight()+weightChange);
+					synapse.setLastChange(weightChange);
+				}
 			}
 		}
 	}
+	
 	
 	/**
 	 * Resets weights and point array
@@ -196,9 +173,6 @@ public class MultilayerPerceptron{
 		}
 		//Update the weights and errors based on the results of the inputs
 		backpropagate(input,expected);
-		
-		
-		//Trains on the next 
 	}
 	
 	public double[] test(double[][] inputs, double expected[]){

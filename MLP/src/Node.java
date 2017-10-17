@@ -11,6 +11,9 @@ public class Node {
 	private double senesteinput = 0;
 	private double senesteoutput = 0;
 	
+	//Delta value.
+	private double delta = 0;
+	
 	//Variable to keep track of inputs passed in
 	private double sum;
 	
@@ -45,6 +48,14 @@ public class Node {
 	
 	public double getSenesteOutput(){
 		return this.senesteoutput;
+	}
+	
+	public double getDelta(){
+		return this.delta;
+	}
+	
+	public void setDelta(double delta){
+		this.delta = delta;
 	}
 	
 	/**

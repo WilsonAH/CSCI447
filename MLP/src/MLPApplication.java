@@ -10,58 +10,36 @@ public class MLPApplication {
 	private static int maxDomain = 1; //Max and min domain of Rosenbrock number generation
 	private static int minDomain = -1;
 	
+	private static int gradientBatchSize = 10;
+	
 	public static void main(String[] args){
 		//Constructs a mlp
-		int[] nodeCounts = {2,5, 1};
-		MultilayerPerceptron mlp = new MultilayerPerceptron(nodeCounts, 1.0, inputVectors, true);
-		
-		double[][] xor = new double[4][2];
-		xor[0][0] = 0;
-		xor[0][1] = 0;
-		xor[1][0] = 1;
-		xor[1][1] = 0;
-		xor[2][0] = 0;
-		xor[2][1] = 1;
-		xor[3][0] = 1;
-		xor[3][1] = 1;
+		int[] nodeCounts = {2,100,1};
+		MultilayerPerceptron mlp = new MultilayerPerceptron(nodeCounts, 0.01, 0.5, inputVectors, false);
+		double[] input = {1,-1};
+		System.out.println(rosenbrockFunction(input));
 		double sumError = 0;
 		for(int validation = 0; validation < 10; validation++){
-			sumError+=fiveByTwoCrossValidation(xor,mlp,(validation==4));
+			sumError+=fiveByTwoCrossValidation(generateInputs(),mlp,(validation==4));
 		}
 		double totalAverageError = sumError/10;
 		System.out.println("Error: "+totalAverageError);
 		
 		
-		
-		/*BufferedReader reader = null;;
-		try {
-			reader = new BufferedReader(new FileReader("inputs.txt"));
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		Scanner scanner = new Scanner(reader);
-		double[][] inputs = new double[100][4];
-		int[] expecteds = new int[100];
-		for(int input = 0; input<inputs.length;input++){
-			for(int i = 0; i < 4; i++){
-				inputs[input][i] = scanner.nextDouble();
-			}
-			expecteds[input] = scanner.nextInt();
-		}*/
-		
 		/*double[][] inputs = generateInputs();
 		Random r = new Random();
 		for(int i = 0; i < inputVectors; i++){
-			//double[] input = xor[r.nextInt(4)];
-			double[] input = inputs[i];
+			double[] input = inputs[i%20];
 			double expected = rosenbrockFunction(input);
-			//double expected = ((int)input[0]+(int)input[1])%2;
 			mlp.train(input, expected);
+			if(i%30==0){
+				mlp.gradientDescent();
+			}
 		}
+		
 		for(int i = 0; i < 4; i++){
 			double in[] = inputs[r.nextInt(inputVectors-1)];
-			//System.out.println("Classifying "+inputs[i][0]+","+inputs[i][1]+". Output: "+mymlp.classify(inputs[i]);
+			//System.out.println("Classifying "+xor[i][0]+","+xor[i][1]+". Output: "+mlp.classify(xor[i])[0]);
 			System.out.println("Classifying "+in[0]+","+in[1]+". Output: "+mlp.classify(in)[0]+". Expected: "+rosenbrockFunction(in));
 		}
 		mlp.graph();*/
@@ -104,14 +82,14 @@ public class MLPApplication {
 			for(int input = 0; input<inputVectors;input++){
 				if(input<inputVectors/2){
 					firstHalfInputs[input] = inputs[input%inputs.length];
-					firstExpected[input] = ((int)firstHalfInputs[input][0]+(int)firstHalfInputs[input][1])%2;
+					firstExpected[input] = rosenbrockFunction(firstHalfInputs[input]);
 					if(input<firstValidationData.length){
 						firstValidationData[input] = firstHalfInputs[input];
 						firstValidationExpected[input] = firstExpected[input];
 					}
 				}else{
 					secondHalfInputs[input-(inputVectors/2)] = inputs[input%inputs.length];
-					secondExpected[input-(inputVectors/2)] = ((int)secondHalfInputs[input-(inputVectors/2)][0]+(int)secondHalfInputs[input-(inputVectors/2)][1])%2;
+					secondExpected[input-(inputVectors/2)] = rosenbrockFunction(secondHalfInputs[input-(inputVectors/2)]);
 					if(input<secondValidationData.length){
 						secondValidationData[input] = secondHalfInputs[input];
 						secondValidationExpected[input] = secondExpected[input];
@@ -126,6 +104,9 @@ public class MLPApplication {
 			int vector;
 			for(vector = validationCutoff; vector<firstHalfInputs.length*0.30;vector++){
 				mlp.train(firstHalfInputs[vector],firstExpected[vector]);
+				if(vector%gradientBatchSize==0){
+					mlp.gradientDescent();
+				}
 			}
 			
 			//Starts to test against validation
@@ -136,6 +117,9 @@ public class MLPApplication {
 				int lastVectorStop = vector;
 				for(vector = lastVectorStop; vector<(lastVectorStop+batchSize) && vector < firstHalfInputs.length;vector++){
 					mlp.train(firstHalfInputs[vector],firstExpected[vector]);
+					if(vector%gradientBatchSize==0){
+						mlp.gradientDescent();
+					}
 				}
 				lastVectorStop+=batchSize;
 				lastErrors[3] = lastErrors[2];
@@ -161,6 +145,9 @@ public class MLPApplication {
 			//Trains on data in 10-30% position
 			for(vector = validationCutoff; vector<firstHalfInputs.length*0.30;vector++){
 				mlp.train(secondHalfInputs[vector],secondExpected[vector]);
+				if(vector%gradientBatchSize==0){
+					mlp.gradientDescent();
+				}
 			}
 			
 			//Starts to test against validation
@@ -172,6 +159,9 @@ public class MLPApplication {
 				int lastVectorStop = vector;
 				for(vector = lastVectorStop; vector<(lastVectorStop+batchSize) && vector < secondHalfInputs.length;vector++){
 					mlp.train(secondHalfInputs[vector],secondExpected[vector]);
+					if(vector%gradientBatchSize==0){
+						mlp.gradientDescent();
+					}
 				}
 				lastVectorStop+=batchSize;
 				lastErrors[3] = lastErrors[2];

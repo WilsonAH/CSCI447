@@ -3,6 +3,9 @@
 public class Synapse {
 	private double weight;
 	private double originalWeight;
+	private double partialDerivative = 0;
+	private double lastChange = 0;
+	private int partials = 0;
 	private Node toNode;//Node the synapse goes to
 	
 	/**
@@ -28,5 +31,26 @@ public class Synapse {
 	
 	public void setWeight(double weight){
 		this.weight = weight;
+	}
+	
+	public double getAveragePartial(){
+		double temp = this.partialDerivative;
+		temp/=partials;
+		this.partialDerivative = 0;
+		this.partials = 0;
+		return temp;
+	}
+	
+	public void addPartial(double partial){
+		this.partialDerivative += partial;
+		this.partials++;
+	}
+	
+	public double getLastChange(){
+		return this.lastChange;
+	}
+	
+	public void setLastChange(double change){
+		this.lastChange = change;
 	}
 }
