@@ -5,7 +5,10 @@ import javax.swing.JFrame;
 
 public class MLPApplication {
 	private static int dimensions = 2; //How many inputs are passed in
-	private static int inputVectors = 10000; //How many arrays of inputs are tested
+	private static int inputVectors = 20000; //How many arrays of inputs are tested
+	
+	private static double learningRate = 0.01; //Adjustable parameter learning rate
+	private static double momentum = 0.5; //Adjustable parameter to control momentum
 	
 	private static int maxDomain = 1; //Max and min domain of Rosenbrock number generation
 	private static int minDomain = -1;
@@ -14,8 +17,8 @@ public class MLPApplication {
 	
 	public static void main(String[] args){
 		//Constructs a mlp
-		int[] nodeCounts = {2,100,1};
-		MultilayerPerceptron mlp = new MultilayerPerceptron(nodeCounts, 0.01, 0.5, inputVectors, false);
+		int[] nodeCounts = {dimensions,1};
+		MultilayerPerceptron mlp = new MultilayerPerceptron(nodeCounts, learningRate, momentum, inputVectors, false);
 		double[] input = {1,-1};
 		System.out.println(rosenbrockFunction(input));
 		double sumError = 0;
