@@ -1,0 +1,13 @@
+Machine Learning Project 2
+Teammate Contributions
+Wilson Harris
+Steve Rolland
+Laura Sullivan-Russett
+
+Laura did the UML design and much of the design document.  She performed the MLP experiments and wrote the algorithm details, the results and algorithm behavior for the final paper.  Laura also did the abstract, description of problem, and summary sections of the final paper.
+
+Wilson coded the MLP network with all of its functions and output graphs. He also wrote part of the experimental design in the design document.
+
+Steve coded the RBF network and ran the experiments on it.  He wrote the RBF description and part of the experimental design for the design document.  He wrote the results and algorithm behavior sections for the final paper.
+
+All three of us did proofreading and final edits on the final paper.
