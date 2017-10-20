@@ -3,6 +3,7 @@ package evolution;
 public class GeneticAlgorithm {
 	private int genCounter;
 	
+	
 	public GeneticAlgorithm() {
 		this.genCounter = 0;
 	}
