@@ -25,8 +25,11 @@ public class GeneticAlgorithm {
 		printPop(pop);
 		
 	}
-	public void fitness() {
+	
+	public double fitness() {
+		double fitness = 0;
 		
+		return fitness;
 	}
 	
 	public void selectParents() {
@@ -65,11 +68,11 @@ public class GeneticAlgorithm {
 	}
 	
 	/**
-	 * crossOver method to cross parent individuals with high probability using
-	 * one point crossover
+	 * crossOver method to cross parent individuals and create children with high probability 
+	 * using one point crossover
 	 * 
 	 * @param parents
-	 * @return updated parents 
+	 * @return children 
 	 */
 	public Individual[] crossOver(Individual[] parents) {
 		Random rand = new Random();
@@ -80,35 +83,41 @@ public class GeneticAlgorithm {
 		// get current weights for parents
 		ArrayList<Double> p1Weights = parents[0].getWeights();
 		ArrayList<Double> p2Weights = parents[1].getWeights();
-		// new ArrayLists for updated parent weights 
-		ArrayList<Double> p1New = new ArrayList<Double>();
-		ArrayList<Double> p2New = new ArrayList<Double>();
+		// new array for children and ArrayLists for child weights
+		Individual[] children = new Individual[2];
+		children[0] = new Individual();
+		children[1] = new Individual();
+		ArrayList<Double> c1New = new ArrayList<Double>();
+		ArrayList<Double> c2New = new ArrayList<Double>();
 		// initiate crossover with 0.90 probability
 		if(randCO <= 90) {
 			// replace all weights before point for one parent with other parent's weights
 			for(int i = 0; i < point; i++) {
-				p1New.add(p2Weights.get(i));
-				p2New.add(p1Weights.get(i));
+				c1New.add(p2Weights.get(i));
+				c2New.add(p1Weights.get(i));
 			}
 			// add own parent's weights after point
 			for(int i = point; i < p1Weights.size(); i++) {
-				p1New.add(p1Weights.get(i));
-				p2New.add(p2Weights.get(i));
+				c1New.add(p1Weights.get(i));
+				c2New.add(p2Weights.get(i));
 			}
 		}
-		// new weights equal old weights if crossover doesn't occur
+		// child weights equal parent weights if crossover doesn't occur
 		else {
-			p1New = p1Weights;
-			p2New = p2Weights;
+			c1New = p1Weights;
+			c2New = p2Weights;
 		}
-		// update parent weights after crossover occurs or not
-		parents[0].updateWeights(parents[0], p1New);
-		parents[1].updateWeights(parents[1], p2New);
-		return parents;
+		// update child weights after crossover occurs or not
+		children[0].updateWeights(children[0], c1New);
+		children[1].updateWeights(children[1], c2New);
+		return children;
 	}
 	
 	
-	public void offspringFitness() {
+	public double offspringFitness() {
+		double fitness = 0;
+		
+		return fitness;
 		
 	}
 	
@@ -123,8 +132,9 @@ public class GeneticAlgorithm {
 		else
 			return false;
 	}
-	public void result() {
-		
+	public ArrayList<Double> result() {
+		ArrayList<Double> results = new ArrayList<Double>();
+		return results;
 	}
 	
 	/**
