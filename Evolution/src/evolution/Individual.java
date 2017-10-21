@@ -40,10 +40,10 @@ public class Individual {
 	 * @param Individual
 	 * @param newWeights
 	 */
-	public void updateWeights(Individual ind, ArrayList<Double> newWeights) {
+	public void updateWeights(ArrayList<Double> newWeights) {
 		for(int i = 0; i < newWeights.size(); i++) {
 			// replace old weights with new weights
-			ind.weights.add(newWeights.set(i, newWeights.get(i)));
+			weights.add(newWeights.set(i, newWeights.get(i)));
 		}
 	}
 	

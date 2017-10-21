@@ -29,15 +29,9 @@ public class Population {
 		return init;
 	}
 	
-	/**
-	 * update method to update the weights of an individual in the population
-	 * @param Individual
-	 * @param newWeights
-	 */
-	public void update(Individual ind, ArrayList<Double> newWeights) {
-			ind.updateWeights(ind, newWeights);
+	public void updatePop(Individual[] newInds) {
+		individuals = newInds;
 	}
-	
 	/**
 	 * getPop method to return the individuals in the current population
 	 * 

@@ -8,6 +8,10 @@ public class Evolution {
 	
 	public static void main(String[] args) {
 		GeneticAlgorithm ga = new GeneticAlgorithm();
-		ga.intialize();
+		System.out.println("Printing GA population...");
+		ga.printPop();
+		DifferentialEvolution de = new DifferentialEvolution();
+		System.out.println("\nPrinting DE population...");
+		de.printPop();
 	}
 }

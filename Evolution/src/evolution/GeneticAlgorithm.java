@@ -10,6 +10,7 @@ import java.util.Random;
  */
 public class GeneticAlgorithm {
 	private int genCounter;
+	private Population pop;
 	
 	private final int PROB = 100;
 	private final double MUTSTART = -0.1;
@@ -19,11 +20,7 @@ public class GeneticAlgorithm {
 	
 	public GeneticAlgorithm() {
 		this.genCounter = 0;
-	}
-	public void intialize() {
-		Population pop = new Population();
-		printPop(pop);
-		
+		this.pop = new Population();
 	}
 	
 	public double fitness() {
@@ -41,7 +38,7 @@ public class GeneticAlgorithm {
 	 * 
 	 * @param current population
 	 */
-	public void mutate(Population pop) {
+	public void mutate() {
 		// rand variable for probability of mutation
 		Random rand = new Random();
 		// randMut variable to create real values for mutation of weights
@@ -63,7 +60,7 @@ public class GeneticAlgorithm {
 				}
 			}
 			// update weights for individual
-			pop.update(inds[i], weights);
+			inds[i].updateWeights(weights);
 		}
 	}
 	
@@ -108,8 +105,8 @@ public class GeneticAlgorithm {
 			c2New = p2Weights;
 		}
 		// update child weights after crossover occurs or not
-		children[0].updateWeights(children[0], c1New);
-		children[1].updateWeights(children[1], c2New);
+		children[0].updateWeights(c1New);
+		children[1].updateWeights(c2New);
 		return children;
 	}
 	
@@ -125,6 +122,12 @@ public class GeneticAlgorithm {
 		
 	}
 	
+	/**
+	 * terminate method to determine termination condition for 
+	 * returning results
+	 * 
+	 * @return boolean
+	 */
 	public boolean terminate() {
 		if(genCounter == 10) {
 			return true;
@@ -132,6 +135,7 @@ public class GeneticAlgorithm {
 		else
 			return false;
 	}
+	
 	public ArrayList<Double> result() {
 		ArrayList<Double> results = new ArrayList<Double>();
 		return results;
@@ -142,7 +146,7 @@ public class GeneticAlgorithm {
 	 * 
 	 * @param current population
 	 */
-	public void printPop(Population pop) {
+	public void printPop() {
 		Individual[] inds = pop.getPop();
 		
 		for(int i = 0; i < inds.length; i++) {
