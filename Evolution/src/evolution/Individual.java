@@ -9,6 +9,7 @@ import java.util.Random;
  */
 public class Individual {
 	private ArrayList<Double> weights;
+	private final int NUMWEIGHTS = 10;
 	
 	/**
 	 * Constructor to create a new Individual and intialize its weights randomly
@@ -25,7 +26,7 @@ public class Individual {
 	private ArrayList<Double> initialize() {
 		ArrayList<Double> initWeights = new ArrayList<Double>();
 		Random random = new Random();
-		for(int i = 0; i < 10; i++) {
+		for(int i = 0; i < NUMWEIGHTS; i++) {
 			// initialize weights randomly to a double between 0 and 1
 			double weight = random.nextDouble();
 			initWeights.add(weight);
@@ -68,7 +69,7 @@ public class Individual {
 	 * @param Individual
 	 * @return ArrayList of individual's weights
 	 */
-	public ArrayList<Double> getWeights(Individual ind) {
-		return ind.weights;
+	public ArrayList<Double> getWeights() {
+		return weights;
 	}
 }
