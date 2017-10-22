@@ -1,18 +1,17 @@
 //Author: Wilson Harris
 //Credit to tutorial by Andreas Thiele for basic structure of algorithm
 import java.lang.Math;
-import java.util.Random;
 import javax.swing.JFrame;
 
 
 public class MultilayerPerceptron{
 	private double[] points; //Array of error over iterations to be graphed using graph()
 	private int pointCounter = 0; //Pointer to the position in points[] that is the first empty slot
-	private double lastError = 0;
 	private double momentum;
 	
+	
 	private double learningrate; //Rate at which weights are adjusted
-	private Layer[] layers;
+	private Layer[] layers; //Layers
 	
 	
 	/**
@@ -24,7 +23,7 @@ public class MultilayerPerceptron{
 	public MultilayerPerceptron(int[] nodeCounts, double learningrate, double momentum, int inputVectors, boolean useLinearOutputActivation){
  		this.learningrate = learningrate;
  		this.momentum = momentum;
- 		points = new double[inputVectors];
+ 		points = new double[(int) (inputVectors-(inputVectors*0.20))];
  		
  		//Creates an array of Layers. Each layer has an array of nodes
  		layers = new Layer[nodeCounts.length];
@@ -45,61 +44,69 @@ public class MultilayerPerceptron{
 	 * @param input 		The input for the network
 	 * @param expected 		The expected output based on the input to the network
 	 */
-	private void backpropagate(double[] input, double expected){
+	private void backpropagate(double[] input, double[] expected){
 		//Gets an output based on the input passed in
 		double[] output = classify(input);
 		//Sets output error
 		for(int n = 0; n < layers[layers.length-1].nodes.length;n++){
 			Node node = layers[layers.length-1].nodes[n];
-			node.setDelta(expected-output[n]);
+			double error = expected[n]-output[n];
+			double derivative = output[n]*(1-output[n]);
+			node.setDelta(error*derivative);
 		}
 		
-		points[pointCounter] = Math.abs(expected-output[0]);
+		//Adds error to array of points to be graphed
+		points[pointCounter] = Math.abs(expected[0]-output[0]);
 		pointCounter++;
 		
-		//Adds the error to the points array for graphing
+		//For each layer except the output layer
 		for(int l = layers.length-2; l >=0; l--){
 			Layer layer = layers[l];
 			Layer forwardLayer = layers[l+1];
+			//For every node in the layer
 			for(int n = 0; n < layer.nodes.length; n++){
 				Node node = layer.nodes[n];
 				double sumError = 0;
+				//For every node in the layer forward of this one
 				for(int forwardN = 0;forwardN < forwardLayer.nodes.length; forwardN++){
 					Node forwardNode = forwardLayer.nodes[forwardN];
+					//Add the error of that forward node times the weight connecting it to this one
 					sumError+=forwardNode.getDelta()*node.getSynapses()[forwardN].getWeight();
 				}
+				//Set the node delta to the sum of errors * weights in the forward layer times the derivative of this node: o*(1-o)
 				node.setDelta(sumError * node.getSenesteOutput()*(1 - node.getSenesteOutput()));
 			}
 		}
 		
 		//Sets partial derivatives on each weight
+		
+		//For each weight in each node in each layer
 		for(int l = 0; l <layers.length; l++){
 			Layer layer = layers[l];
 			for(int n = 0; n <layer.nodes.length;n++){
 				Node node = layer.nodes[n];
 				for(int s = 0; s < node.getSynapses().length;s++){
 					Synapse synapse = node.getSynapses()[s];
+					//Add the weights partial derivative to its list of partials with the value node.delta * node.output
 					synapse.addPartial(synapse.getToNode().getDelta() * node.getSenesteOutput());
-					/*double weightChange = learningrate*synapse.getPartial()+synapse.getLastChange()*this.momentum;
-					synapse.setWeight(synapse.getWeight()+weightChange);
-					synapse.setLastChange(weightChange);*/
 				}
 			}
 		}
-		
-		//Gradient Descent
-		
-		/*
-		}*/
 	}
 	
+	
+	/**
+	 * Updates the weights based on the partial derivative averages made by backpropogation
+	 */
 	public void gradientDescent(){
+		//For each weight in each node in each layer
 		for(int l = 0; l <layers.length; l++){
 			Layer layer = layers[l];
 			for(int n = 0; n <layer.nodes.length;n++){
 				Node node = layer.nodes[n];
 				for(int s = 0; s < node.getSynapses().length;s++){
 					Synapse synapse = node.getSynapses()[s];
+					//Update the weight by adding learningRate * the average partial derivative on the weight + the momentum of weight change
 					double weightChange = learningrate*synapse.getAveragePartial()+synapse.getLastChange()*this.momentum;
 					synapse.setWeight(synapse.getWeight()+weightChange);
 					synapse.setLastChange(weightChange);
@@ -113,16 +120,20 @@ public class MultilayerPerceptron{
 	 * Resets weights and point array
 	 */
 	public void reset(){
+		//For each weight in each node in each layer
 		for(int l = 0; l < layers.length; l++){
 			Layer layer = layers[l];
 			for(int n = 0; n < layer.nodes.length;n++){
 				Node node = layer.nodes[n];
 				for(int s = 0; s < node.getSynapses().length;s++){
 					Synapse synapse = node.getSynapses()[s];
+					//Set the weight to the original random value
 					synapse.resetWeight();
 				}
 			}
 		}
+		
+		//Reset the array graphing the errors
 		points = new double[points.length];
 		pointCounter = 0;
 	}
@@ -163,9 +174,9 @@ public class MultilayerPerceptron{
 	/**
 	 *Iterates through all of input vectors and updates the weights based on their correctness.
 	 *@param input 		Inputs to the network
-	 *@param expected	Expected value based on input
+	 *@param expected	Expected outputs based on the inputs
 	 */
-	public void train(double[] input, double expected){
+	public void train(double[] input, double[] expected){
 		//Trains on the data at 10-35% of data. The first 10% is reserved for validation
 		for(int n = 0; n < layers[0].nodes.length;n++){
 			Node node = layers[0].nodes[n];
@@ -175,19 +186,59 @@ public class MultilayerPerceptron{
 		backpropagate(input,expected);
 	}
 	
-	public double[] test(double[][] inputs, double expected[]){
-		double sumError = 0;
+	/**
+	 *Iterates through all of input vectors and gets the average error
+	 *@param input 		Inputs to the network
+	 *@param expected	Expected outputs based on the inputs
+	 */
+	public double[] test(double[][] inputs, double expected[][]){
+		double correct = 0;
 		double sumExpected = 0;
+		//For each input vector
 		for(int vector = 0; vector<inputs.length;vector++){
+			//Get the output based on that input
 			double[] output = this.classify(inputs[vector]);
+			double[] expect = expected[vector];
+			
+			//For each output node
+			int maxPosition = 0;
+			int correctPosition = 0;
+			double maxPercent = 0;
 			for(int n = 0; n < layers[layers.length-1].nodes.length;n++){
-				sumError += Math.abs(expected[vector]-output[n]);
-				sumExpected += Math.abs(expected[n]);
+				//Add the error and expected to their sum values
+				double perdiction = Math.abs(expect[n]-output[n]);
+				if(expect.length>1){
+					if(expect[n] == 1){
+						correctPosition = n;
+					}
+					if(perdiction>maxPercent){
+						maxPercent=perdiction;
+						maxPosition = n;
+					}
+					sumExpected += Math.abs(expect[n]);
+				}else{
+					if(expect[n]==1){
+						if(output[n]>0.5){
+							correct++;
+						}
+					}else{
+						if(output[n]<=0.5){
+							correct++;
+						}
+					}
+				}
 			}
-			sumError/=layers[layers.length-1].nodes.length;
+			if(expect.length>1){
+				if(maxPosition==correctPosition){
+					correct++;
+				}
+			}
+			
+			//Average the error and expected value
 			sumExpected/=layers[layers.length-1].nodes.length;
 		}
-		double[] averages = {sumError/inputs.length,sumExpected/inputs.length};
+		//System.out.println((correct-inputs.length)+" "+inputs.length);
+		double[] averages = {(inputs.length-correct)/inputs.length,sumExpected/inputs.length};
 		return averages;
 	}
 	

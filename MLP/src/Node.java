@@ -78,7 +78,7 @@ public class Node {
 		//Passes output forward
 		for(int s = 0; s < this.getSynapses().length; s++){
 			Synapse synapse = this.getSynapses()[s];
-			if(this.useActivationFunciton){
+			if(this.useActivationFunciton){//Doesn't use activation function if output layer without an activation funciton
 				synapse.getToNode().input(MultilayerPerceptron.activation(this.sum)*synapse.getWeight());
 			}
 			else{

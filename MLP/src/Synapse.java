@@ -2,14 +2,16 @@
 
 public class Synapse {
 	private double weight;
-	private double originalWeight;
-	private double partialDerivative = 0;
-	private double lastChange = 0;
-	private int partials = 0;
+	private double originalWeight;//Original randomly generated weight
+	private double partialDerivative = 0;//Partial derivatives based on the last set of inputs
+	private double lastChange = 0;//The last update of weight. Used for momentum
+	private int partials = 0;//Number of partial derivatives added without averaging them
 	private Node toNode;//Node the synapse goes to
 	
 	/**
 	 * Constructor for Synapse
+	 * @param weight	weight of synapse
+	 * @param toNode	node the synapse is going to
 	 */
 	public Synapse(double weight, Node toNode){
 		this.weight = weight;
@@ -33,6 +35,9 @@ public class Synapse {
 		this.weight = weight;
 	}
 	
+	/**
+	 * Averages the partial derivatives of the synapse
+	 */
 	public double getAveragePartial(){
 		double temp = this.partialDerivative;
 		temp/=partials;

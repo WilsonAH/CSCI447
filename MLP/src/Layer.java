@@ -1,3 +1,4 @@
+//Author: Wilson Harris
 
 public class Layer {
 	public Node[] nodes;
