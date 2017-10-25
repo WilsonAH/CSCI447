@@ -9,6 +9,9 @@ public class MultilayerPerceptron{
 	private int pointCounter = 0; //Pointer to the position in points[] that is the first empty slot
 	private double momentum;
 	
+	private int[] nodeCounts;
+	private int inputVectors;
+	private boolean useLinearOutputActivation;
 	
 	private double learningrate; //Rate at which weights are adjusted
 	private Layer[] layers; //Layers
@@ -23,6 +26,9 @@ public class MultilayerPerceptron{
 	public MultilayerPerceptron(int[] nodeCounts, double learningrate, double momentum, int inputVectors, boolean useLinearOutputActivation){
  		this.learningrate = learningrate;
  		this.momentum = momentum;
+ 		this.nodeCounts = nodeCounts;
+ 		this.inputVectors = inputVectors;
+ 		this.useLinearOutputActivation = useLinearOutputActivation;
  		points = new double[(int) (inputVectors-(inputVectors*0.20))];
  		
  		//Creates an array of Layers. Each layer has an array of nodes
@@ -37,7 +43,13 @@ public class MultilayerPerceptron{
 				layers[layer] = new Layer(nodeCounts[layer],nodeCounts[layer+1],layers[layer+1],true);
 			}
 		}
- 	}
+	}
+	
+	public MultilayerPerceptron createCopy(){
+		MultilayerPerceptron copy = new MultilayerPerceptron(this.nodeCounts, this.learningrate, this.momentum, this.inputVectors, this.useLinearOutputActivation);
+		copy.setWeight(this.getWeights());
+		return copy;
+	}
 	
 	/**
 	 * Algorithm for propagating error back through the network and updating the weights.
@@ -137,6 +149,51 @@ public class MultilayerPerceptron{
 		points = new double[points.length];
 		pointCounter = 0;
 	}
+	
+	/**
+	 * Set the weights to passed in values
+	 * @param weights the values to set the weights to
+	 */
+	public void setWeight(double[][][] weights){
+		//For each weight in each node in each layer
+		for(int l = 0; l < layers.length; l++){
+			Layer layer = layers[l];
+			for(int n = 0; n < layer.nodes.length;n++){
+				Node node = layer.nodes[n];
+				for(int s = 0; s < node.getSynapses().length;s++){
+					Synapse synapse = node.getSynapses()[s];
+					//Set the weight to the passed in value
+					synapse.setWeight(weights[l][n][s]);
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Get the weights for every synapse
+	 * @return the weights of every synapse with the index [layer][node][node connected to]
+	 */
+	public double[][][] getWeights(){
+		//Array of weights with index of [layer][node][node connected to]
+		double[][][] weights = new double[layers.length][][];
+		//For each weight in each node in each layer
+		for(int l = 0; l < layers.length; l++){
+			Layer layer = layers[l];
+			weights[l] = new double[layer.nodes.length][];
+			for(int n = 0; n < layer.nodes.length;n++){
+				Node node = layer.nodes[n];
+				weights[l][n] = new double[node.getSynapses().length];
+				for(int s = 0; s < node.getSynapses().length;s++){
+					Synapse synapse = node.getSynapses()[s];
+					//Set the weight of the array to return
+					weights[l][n][s] = synapse.getWeight();
+				}
+			}
+		}
+		return weights;
+	}
+	
+	
 	
 	/**
 	 * Changes an input based on an activation function
