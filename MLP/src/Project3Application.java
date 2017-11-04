@@ -7,22 +7,66 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class Project3Application {
-	private static int dimensions = 10; //How many inputs are passed in
-	private static int inputVectors = 1000000; //How many arrays of inputs are tested
+	private static int dimensions = 9; //How many inputs are passed in
+	private static int inputVectors = 958; //How many arrays of inputs are tested
+	private static int NUMGENS = 0;
+	private static int possibleClassifications = 2; //If the problem is multiClass, the number of classifcations
 	
-	private static int possibleClassifications = 10; //If the problem is multiClass, the number of classifcations
-	
-	private static String filename = "poker.txt";
+	private static String filename = "tictactoe.txt";
 	
 	private static int gradientBatchSize = 5;//How many inputs are trained on before updating weights
 	
 	public static void main(String[] args){
-		//Constructs a mlp
-		int[] nodeCounts = {10,30,10};
+		//Constructs an mlp
+		int[] nodeCounts = {9,50,1};
 		
 		//Creates a MLP with the inputs MultilayerPerceptron(nodeCounts, learningrate, momentum, numberOfInputVectors, useLogisticOutputActivation)
-		MultilayerPerceptron mlp = new MultilayerPerceptron(nodeCounts, 0.1, 0.5, inputVectors, true);
-		
+		MultilayerPerceptron mlp = new MultilayerPerceptron(nodeCounts, 0.5, 0.1, inputVectors, true);
+		MultilayerPerceptron[] MLPs = new MultilayerPerceptron[50];
+		for(int i = 0; i < MLPs.length; i++) {
+			mlp.reset();
+			MLPs[i] = mlp;
+		}
+		GeneticAlgorithm ga = new GeneticAlgorithm();
+		System.out.println("Initializing GA");
+		ga.initPopulation(MLPs);
+		double[][] inputsAndExpected = loadInputs();
+		double inputs[][] = new double[inputsAndExpected.length][dimensions];
+		double[][] expected = null;
+		if(possibleClassifications>2){
+			expected = new double[inputsAndExpected.length][possibleClassifications];
+		}else
+			expected = new double[inputsAndExpected.length][1];
+		//Separate inputs and outputs
+		for(int index = 0; index < inputsAndExpected.length; index++){
+			for(int input = 0; input < inputsAndExpected[index].length; input++){
+				if(input < dimensions){
+					inputs[index][input] = inputsAndExpected[index][input];
+				}else{
+					if(possibleClassifications>2){
+						expected[index][(int)inputsAndExpected[index][input]] = 1;
+					}else{
+						expected[index][0] = inputsAndExpected[index][input];
+					}
+				}
+			}
+		}
+		double errors = ga.averageGenerationFitness(ga.fitness(inputs, expected));
+		int p = 0;
+		do {
+			System.out.println("Error = " + errors);
+			p++;
+			System.out.println("Evolving Generation" + p);
+			ga.evolveOneGeneration(inputs, expected);
+			double newError = ga.averageGenerationFitness(ga.fitness(inputs, expected));
+			if(newError == errors) {
+				NUMGENS++;
+			}
+			errors = newError;
+		}
+		while(!ga.terminate(errors) && NUMGENS != 10); 
+		mlp = ga.result(ga.fitness(inputs, expected));
+		System.out.println("Best MLP returned.");
 		//Runs 10 5x2 cross validation tests and sums the error
 		double sumCorrectPercent = 0;
 		for(int validation = 0; validation < 10; validation++){
@@ -53,7 +97,12 @@ public class Project3Application {
 		}
 		mlp.graph();*/
 	}
-	
+	public double getError(double sumCorrectPercent) {
+		double totalAverageError = sumCorrectPercent/10;
+		totalAverageError = totalAverageError*100;
+		System.out.println("Error: "+(totalAverageError*100));
+		return totalAverageError;
+	}
 	
 	/**
 	 * Runs 5x2 cross validation of a MLP on an input set.  The input is split into two halves.  The MLP trains 
@@ -64,7 +113,7 @@ public class Project3Application {
 	 * @param lastRun				A boolean used to check if the data should be graphed. (Only want to graph once and not five times)
 	 */	
 	private static double fiveByTwoCrossValidation(double[][] inputsAndExpected, MultilayerPerceptron mlp, boolean isLastRun){
-		//Initializes varibles to be used to average error and expected numbers
+		//Initializes variables to be used to average error and expected numbers
 		double sumCorrectPercent = 0;
 		double sumExpect = 0;
 		
@@ -74,7 +123,7 @@ public class Project3Application {
 			expected = new double[inputsAndExpected.length][possibleClassifications];
 		}else
 			expected = new double[inputsAndExpected.length][1];
-		//Seperate inputs and outputs
+		//Separate inputs and outputs
 		for(int index = 0; index < inputsAndExpected.length; index++){
 			for(int input = 0; input < inputsAndExpected[index].length; input++){
 				if(input < dimensions){
