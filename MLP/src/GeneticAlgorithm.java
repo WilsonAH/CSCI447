@@ -37,9 +37,11 @@ public class GeneticAlgorithm {
 	 */
 	public void evolveOneGeneration(double[][] inputs, double[][] expected) {
 		System.out.println("Evolving population.");
+		// Save the current population in a temp variable for post evolution comparison
 		MultilayerPerceptron[] temp = population;
 		MultilayerPerceptron[] newPop = new MultilayerPerceptron[population.length];
 		MultilayerPerceptron[] child = new MultilayerPerceptron[2]; 
+		// call mutate function for population
 		mutate();
 		// create 2 children each crossover and add to new population
 		for(int i = 0; i < newPop.length; i+=2) {
@@ -47,10 +49,11 @@ public class GeneticAlgorithm {
 			newPop[i] = child[0];
 			newPop[i+1] = child[1];
 		}
+		// find fitness of old population and new population
 		double[] tempAvg = fitness(inputs, expected);
 		population = newPop;
 		double[] newAvg = fitness(inputs, expected);
-		
+		// if the new population is less fit, keep the old population otherwise replace
 		if(averageGenerationFitness(tempAvg) < averageGenerationFitness(newAvg)) {
 			population = temp;
 		}
@@ -86,7 +89,7 @@ public class GeneticAlgorithm {
 	 * @param current population
 	 */
 	public void mutate() {
-		System.out.println("Mutation running.");
+		//System.out.println("Mutation running.");
 		// rand variable for probability of mutation
 		Random rand = new Random();
 		// randMut variable to create real values for mutation of weights

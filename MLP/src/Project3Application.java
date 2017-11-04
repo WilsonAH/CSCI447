@@ -22,6 +22,7 @@ public class Project3Application {
 		
 		//Creates a MLP with the inputs MultilayerPerceptron(nodeCounts, learningrate, momentum, numberOfInputVectors, useLogisticOutputActivation)
 		MultilayerPerceptron mlp = new MultilayerPerceptron(nodeCounts, 0.5, 0.1, inputVectors, true);
+		// Workaround to run the GA with randomized MLPs
 		MultilayerPerceptron[] MLPs = new MultilayerPerceptron[50];
 		for(int i = 0; i < MLPs.length; i++) {
 			mlp.reset();
@@ -30,6 +31,7 @@ public class Project3Application {
 		GeneticAlgorithm ga = new GeneticAlgorithm();
 		System.out.println("Initializing GA");
 		ga.initPopulation(MLPs);
+		// Creating the inputs and expected to use for fitness of populations - stolen from cross validation
 		double[][] inputsAndExpected = loadInputs();
 		double inputs[][] = new double[inputsAndExpected.length][dimensions];
 		double[][] expected = null;
@@ -51,6 +53,7 @@ public class Project3Application {
 				}
 			}
 		}
+		// Find the error for the initial population
 		double errors = ga.averageGenerationFitness(ga.fitness(inputs, expected));
 		int p = 0;
 		do {
@@ -59,13 +62,17 @@ public class Project3Application {
 			System.out.println("Evolving Generation" + p);
 			ga.evolveOneGeneration(inputs, expected);
 			double newError = ga.averageGenerationFitness(ga.fitness(inputs, expected));
+			// If error stays the same, increment the number of generations
 			if(newError == errors) {
 				NUMGENS++;
 			}
 			errors = newError;
 		}
+		// continue to evolve until the error falls beneath the threshold or 
+		// error is the same for 10 generations
 		while(!ga.terminate(errors) && NUMGENS != 10); 
 		mlp = ga.result(ga.fitness(inputs, expected));
+		// run MLP with best version returned by GA
 		System.out.println("Best MLP returned.");
 		//Runs 10 5x2 cross validation tests and sums the error
 		double sumCorrectPercent = 0;
