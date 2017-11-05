@@ -1,3 +1,4 @@
+package evolution;
 //Author: Wilson Harris
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -38,23 +39,41 @@ public class Project3Application {
 	private static double standardDeviation = 0.5;
 	private static double alpha = 2;
 	
+	// variables for GA
+	// size of population
+	private static int size = 20;
+	// probability of crossover
+	private static double crossoverRate = 0.9;
+	
+	//variables for DE
+	// differential weight/scaling factor, tunable parameter between (0, ∞)
+	private static double F = 0.5;
+	// crossover probability, tunable parameter between (0, 1)
+	private static double CR = 0.5;
+	
+	
 	public static void main(String[] args){
 		//Constructs a mlp
 		int[] nodeCounts = {42,30,3};
 		
 		//Creates a MLP with the inputs MultilayerPerceptron(nodeCounts, learningrate, momentum, numberOfInputVectors, useLogisticOutputActivation)
-		MultilayerPerceptron[] MLPs = new MultilayerPerceptron[mu];
-		for(int i = 0; i < mu; i++){
+		MultilayerPerceptron[] MLPs = new MultilayerPerceptron[size];
+		for(int i = 0; i < size; i++){
 			MLPs[i] = new MultilayerPerceptron(nodeCounts, learningRate, momentum, inputVectors, true);
 		}
+		DifferentialEvolution de = new DifferentialEvolution(size, F, CR);
+		de.initPopulation(MLPs);
 		
-		EvolutionAlgorithm es = new EvolutionaryStrategy(mu,lambda,mutationRate,standardDeviation,alpha);
-		es.initPopulation(MLPs);
+		/*GeneticAlgorithm ga = new GeneticAlgorithm(size, mutationRate, crossoverRate);
+		ga.initPopulation(MLPs);*/
+		
+		/*EvolutionAlgorithm es = new EvolutionaryStrategy(mu,lambda,mutationRate,standardDeviation,alpha);
+		es.initPopulation(MLPs);*/
 		
 		//Runs 10 5x2 cross validation tests and sums the error
 		double sumCorrectPercent = 0;
 		for(int validation = 0; validation < 10; validation++){
-			sumCorrectPercent+=fiveByTwoCrossValidation(loadInputs(),es,(validation==4));
+			sumCorrectPercent+=fiveByTwoCrossValidation(loadInputs(),de,(validation==4));
 		}
 		
 		//Averages the errors from the ten tests

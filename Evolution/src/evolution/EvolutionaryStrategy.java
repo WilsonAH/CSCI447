@@ -1,3 +1,5 @@
+package evolution; 
+
 import java.util.Random;
 
 public class EvolutionaryStrategy extends EvolutionAlgorithm{
