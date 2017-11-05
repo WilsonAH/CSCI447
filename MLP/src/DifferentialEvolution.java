@@ -2,13 +2,13 @@
 import java.util.ArrayList;
 import java.util.Random;
 /**
- * @author laurabsullivan-russett
+ * @author laura sullivan-russett
  * @version November 13, 2017
  *
  */
 public class DifferentialEvolution {
 	private MultilayerPerceptron[] population;
-	private final int SIZE = 50;
+	private final int SIZE = 20;
 	
 	// differential weight/scaling factor, tunable parameter between (0, ∞)
 	private final double F = 0.5;
@@ -20,7 +20,7 @@ public class DifferentialEvolution {
 	/**
 	 * Constructor to initialize DE algorithm and create its population
 	 */
-	public DifferentialEvolution(int popSize, int generations) {
+	public DifferentialEvolution() {
 		this.population = new MultilayerPerceptron[SIZE];
 	}
 	
@@ -31,10 +31,31 @@ public class DifferentialEvolution {
 	 */
 	public void initPopulation(MultilayerPerceptron[] MLPs){
 		for(int individual = 0; individual < population.length; individual++){
-			population[individual] = MLPs[individual];
+			this.population[individual] = MLPs[individual];
 		}
 	}
-	
+	/**
+	 * evolveOneGeneration method to update the population with the individuals
+	 * after mutation and crossover.
+	 */
+	public void evolveOneGeneration(double[][] inputs, double[][] expected) {
+		double[] averageErrors = fitness(inputs, expected);
+		MultilayerPerceptron[] temp = this.population;
+		double avg = averageGenerationFitness(averageErrors);
+		if(terminate(avg)) {
+			result(averageErrors);
+		}
+		else {
+			// create new array to hold next generation and mutate current population
+			MultilayerPerceptron[] generation = crossOver(inputs, expected); 
+			// update population with new generation
+			this.population = generation;
+			double[] newErrors = fitness(inputs, expected);
+			if(averageGenerationFitness(newErrors) > avg) {
+				this.population = temp;
+			}
+		}
+	}
 	/**
 	 * fitness method to determine the fitness of each individual MLP by determining
 	 * the error in classification
@@ -57,41 +78,6 @@ public class DifferentialEvolution {
 		}
 		return averageErrors;
 	}
-	
-	/**
-	 * selectAgents method to select and return three other unique individuals 
-	 * to calculate mutation
-	 * 
-	 * @param target individual
-	 * @return three unique individuals 
-	 */
-	public MultilayerPerceptron[] selectAgents(MultilayerPerceptron target) {
-		// create array for agents
-		MultilayerPerceptron[] agents  = new MultilayerPerceptron[3];
-		// select individual randomly to compare to target
-		Random r = new Random();
-		int select = r.nextInt(population.length);
-		// while individual is not unique, randomly select another
-		while(population[select] == target) {
-			select = r.nextInt(population.length);
-		}
-		// once unique agent selected, add to agents array
-		agents[0] = population[select];
-		// while individual is not unique, randomly select another
-		while(population[select] == target || population[select] == agents[0]) {
-			select = r.nextInt(population.length);
-		}
-		// once unique agent selected, add to agents array
-		agents[1] = population[select];
-		// while individual is not unique, randomly select another
-		while(population[select] == target || population[select] == agents[0] || population[select] == agents[0]) {
-			select = r.nextInt(population.length);
-		}
-		// once unique agent selected, add to agents array
-		agents[2] = population[select];
-		return agents;
-	}
-		
 	/**
 	 * crossOver method to use each individual in the population as a target
 	 * individual, select agents to create a trial vector. Use trial and target to 
@@ -101,59 +87,65 @@ public class DifferentialEvolution {
 	 * @return array of MLPs
 	 */
 	public MultilayerPerceptron[] crossOver(double[][] inputs, double[][] expected) {
+		System.out.println("Crossover Happening");
 		// get the fitness of the current population
 		double[] averageErrors = fitness(inputs, expected);
 		// save the current population in a temporary variable
-		MultilayerPerceptron[] temp = population;
+		MultilayerPerceptron[] temp = this.population;
 		// rand variable for feature crossover
 		Random rand = new Random();
 		// create array for manipulated population
-		MultilayerPerceptron[] replacements = new MultilayerPerceptron[population.length];
+		MultilayerPerceptron[] replacements = this.population;
 		// for each individual (parent) in the population, get agents and calculate trial individual
 		for(int i = 0; i < population.length; i++) {
-			MultilayerPerceptron parent = population[i];
-			MultilayerPerceptron[] agents = selectAgents(parent);
+			MultilayerPerceptron parent = this.population[i];
+			MultilayerPerceptron[] agents = selectAgents(i);
 			// get weight arrays for each selected agent
 			double[][][] target = agents[0].getWeights();
 			double[][][] diff1 = agents[1].getWeights();
 			double[][][] diff2 = agents[2].getWeights();
 			// create empty trial weight array
-			double[][][] trial = new double[target.length][target[0].length][target[0][0].length];
+			double[][][] trial = target;
 			// for each weight in the parent's array list, calculate trial value
 			// using weights at same index for each agent 
 			for (int l = 0; l < target.length; l++) {
 				for (int n = 0; n < target[l].length; n++) {
 					for (int s = 0; s < target[l][n].length; s++) {
+						//System.out.println("Trial calculation");
 						// calculate trial weight (target + scaling factor(differenceV1 - differenceV2)
 						double weight = (target[l][n][s] + F * (diff1[l][n][s] - diff2[l][n][s]));
 						trial[l][n][s] = weight;
 					}
 				}
 			}
+			ArrayList<Double> trialArray = toArray(trial);
 			// get an array of random values (0, 1) for each feature
 			double[] featureVals = coIndices();
 			// pick a random index, ensuring one parent feature will be retained
 			int k = rand.nextInt(featureVals.length);
 			double[][][] parentWeights = parent.getWeights();
+			ArrayList<Double> parentArray = toArray(parentWeights);
 			// for each feature, if the feature value is greater than the crossover probability
 			// or the index = k, the parent feature will be retained in the child
 			for(int j = 0; j < featureVals.length; j++) {
 				if(featureVals[j] > CR || j == k) {
-					for (int l = 0; l < target.length; l++) {
-						for (int n = 0; n < target[l].length; n++) {
-							for (int s = 0; s < target[l][n].length; s++) {
-								trial[l][n][s] = parentWeights[l][n][s];
-							}
-						}
+					trialArray.set(j, parentArray.get(j));
+				}
+			}
+			int a = 0;
+			for (int l = 0; l < trial.length; l++) {
+				for (int n = 0; n < trial[l].length; n++) {
+					for (int s = 0; s < trial[l][n].length; s++) {
+						trial[l][n][s] = trialArray.get(a);
+						a++;
 					}
 				}
-				// else the trial vector's feature becomes the child's feature
 			}
 			// set the new individuals weights after crossover
 			replacements[i].setWeight(trial);
 		}
 		// replace the current population with the new one and determine the new fitness
-		population = replacements;
+		this.population = replacements;
 		double[] newErrors = fitness(inputs, expected);
 		// for each individual, if the error is higher for the new individual, the parent 
 		// individual is put back into the population, otherwise the child remains 
@@ -165,23 +157,43 @@ public class DifferentialEvolution {
 		return replacements;	
 	}
 	/**
-	 * newGeneration method to update the population with the individuals
-	 * after mutation and crossover.
+	 * selectAgents method to select and return three other unique individuals 
+	 * to calculate mutation
+	 * 
+	 * @param target individual
+	 * @return three unique individuals 
 	 */
-	public void newGeneration(double[][] inputs, double[][] expected) {
-		double[] averageErrors = fitness(inputs, expected);
-		double avg = averageGenerationFitness(averageErrors);
-		if(terminate(avg)) {
-			result(averageErrors);
+	public MultilayerPerceptron[] selectAgents(int parentIndex) {
+		// create array for agents
+		MultilayerPerceptron[] agents  = new MultilayerPerceptron[3];
+		// select individual randomly to compare to target
+		Random r = new Random();
+		int select = r.nextInt(population.length);
+		// while individual is not unique, randomly select another
+		do {
+			select = r.nextInt(population.length);
 		}
-		else {
-			// create new array to hold next generation and mutate current population
-			MultilayerPerceptron[] generation = crossOver(inputs, expected); 
-			// update population with new generation
-			population = generation;
+		while(select == parentIndex); 
+		// once unique agent selected, add to agents array
+		agents[0] = population[select];
+		int agent0 = select;
+		// while individual is not unique, randomly select another
+		do {
+			select = r.nextInt(population.length);
 		}
+		while(select == parentIndex || select == agent0);
+		agents[1] = population[select];
+		int agent1 = select;
+		// while individual is not unique, randomly select another
+		do {
+			select = r.nextInt(population.length);
+		}
+		while(select == parentIndex || select == agent0 || select == agent1);
+		agents[2] = population[select];
+		return agents;
 	}
-	private double averageGenerationFitness(double[] averageErrors) {
+	
+	public double averageGenerationFitness(double[] averageErrors) {
 		double average = 0;
 		// for each individual in the population, sum the error
 		for(int i = 0; i < population.length; i++) {
@@ -232,6 +244,16 @@ public class DifferentialEvolution {
 		}
 		return indices;
 	}
-	
+	private ArrayList<Double> toArray(double[][][] weights) {
+		ArrayList<Double> weightArray = new ArrayList<Double>();
+		for (int l = 0; l < weights.length; l++) {
+			for (int n = 0; n < weights[l].length; n++) {
+				for (int s = 0; s < weights[l][n].length; s++) {
+					weightArray.add(weights[l][n][s]);
+				}
+			}
+		}
+		return weightArray;
+	}
 }
 

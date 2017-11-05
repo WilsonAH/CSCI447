@@ -1,7 +1,7 @@
 import java.util.Random;
 
 /**
- * @author laurabsullivan-russett
+ * @author laura sullivan-russett
  * @version November 13, 2017
  *
  */
@@ -113,7 +113,6 @@ public class GeneticAlgorithm {
 						}
 					}
 				}
-
 			}
 			// update weights for individual
 			population[i].setWeight(weights);
