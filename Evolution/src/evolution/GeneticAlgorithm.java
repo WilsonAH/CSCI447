@@ -133,6 +133,11 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 			population[i].setWeight(weights);
 		}
 	}
+	/**
+	 * getPopulation method to return population
+	 * 
+	 * @return population of MLPs
+	 */
 	public  MultilayerPerceptron[] getPopulation() {
 		MultilayerPerceptron[] MLPs = new MultilayerPerceptron[size];
 		for(int i = 0; i < size; i++){

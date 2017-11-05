@@ -19,7 +19,7 @@ public class DifferentialEvolution extends EvolutionAlgorithm {
 	private double CR;
 	
 	/**
-	 * Constructor to initialize DE algorithm and create its population
+	 * Constructor to initialize DE algorithm
 	 */
 	public DifferentialEvolution(int size, double F, double CR) {
 		this.population = new MultilayerPerceptron[size];
@@ -43,15 +43,18 @@ public class DifferentialEvolution extends EvolutionAlgorithm {
 	 * after mutation and crossover.
 	 */
 	public void evolveOneGeneration(double[][] inputs, double[][] expected) {
+		// get error of current population
 		double[] averageErrors = fitness(inputs, expected);
+		// save the current population
 		MultilayerPerceptron[] temp = this.population;
 		double avg = averageGenerationFitness(averageErrors);
 		System.out.println("Error = " + avg);
+		// test termination condition
 		if(terminate(avg)) {
 			result(averageErrors);
 		}
 		else {
-			// create new array to hold next generation and mutate current population
+			// create new array to hold next generation and crossover current population
 			MultilayerPerceptron[] generation = crossOver(inputs, expected); 
 			// update population with new generation
 			this.population = generation;
@@ -123,12 +126,14 @@ public class DifferentialEvolution extends EvolutionAlgorithm {
 					}
 				}
 			}
+			// move trial weights into an ArrayList for manipulation
 			ArrayList<Double> trialArray = toArray(trial);
-			// get an array of random values (0, 1) for each feature
+			// get an array of random values (0, 1) for each feature for comparison with CR
 			double[] featureVals = coIndices();
 			// pick a random index, ensuring one parent feature will be retained
 			int k = rand.nextInt(featureVals.length-1);
 			double[][][] parentWeights = parent.getWeights();
+			// move parent weights into an ArrayList for manipulation 
 			ArrayList<Double> parentArray = toArray(parentWeights);
 			// for each feature, if the feature value is greater than the crossover probability
 			// or the index = k, the parent feature will be retained in the child
@@ -137,6 +142,7 @@ public class DifferentialEvolution extends EvolutionAlgorithm {
 					trialArray.set(j, parentArray.get(j));
 				}
 			}
+			// put resulting weights back into the 3D weight array
 			int a = 0;
 			for (int l = 0; l < trial.length; l++) {
 				for (int n = 0; n < trial[l].length; n++) {
@@ -198,6 +204,13 @@ public class DifferentialEvolution extends EvolutionAlgorithm {
 		return agents;
 	}
 	
+	/**
+	 * averageGenerationFitness method to add up the error for each individual
+	 * and get the average of the population
+	 * 
+	 * @param averageErrors
+	 * @return average fitness of generation
+	 */
 	public double averageGenerationFitness(double[] averageErrors) {
 		double average = 0;
 		// for each individual in the population, sum the error
@@ -213,6 +226,7 @@ public class DifferentialEvolution extends EvolutionAlgorithm {
 	 * @return boolean
 	 */
 	public boolean terminate(double avg) {
+		// if the average generational error is less than the termination condition
 		if (avg <= ERROR) {
 			return true;
 		} else
@@ -232,6 +246,11 @@ public class DifferentialEvolution extends EvolutionAlgorithm {
 		}
 		return best;
 	}
+	/**
+	 * coIndices method to create an array of indices for crossover
+	 * 
+	 * @return array of index values
+	 */
 	private double[] coIndices() {
 		Random rand = new Random();
 		double[][][] weights = population[0].getWeights();
@@ -249,8 +268,15 @@ public class DifferentialEvolution extends EvolutionAlgorithm {
 		}
 		return indices;
 	}
+	/**
+	 * toArray helper method to convert 3D weight array into an ArrayList
+	 * 
+	 * @param weights
+	 * @return ArrayList of weights
+	 */
 	private ArrayList<Double> toArray(double[][][] weights) {
 		ArrayList<Double> weightArray = new ArrayList<Double>();
+		// for each weight in the 3D array, add to ArrayList
 		for (int l = 0; l < weights.length; l++) {
 			for (int n = 0; n < weights[l].length; n++) {
 				for (int s = 0; s < weights[l][n].length; s++) {
@@ -261,6 +287,11 @@ public class DifferentialEvolution extends EvolutionAlgorithm {
 		return weightArray;
 	}
 
+	/**
+	 * getPopulation method to return population
+	 * 
+	 * @return population of MLPs
+	 */
 	public MultilayerPerceptron[] getPopulation() {
 		MultilayerPerceptron[] MLPs = new MultilayerPerceptron[size];
 		for(int i = 0; i < size; i++){
