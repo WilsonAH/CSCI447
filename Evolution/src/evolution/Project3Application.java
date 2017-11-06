@@ -47,7 +47,7 @@ public class Project3Application {
 	
 	//variables for DE
 	// differential weight/scaling factor, tunable parameter between (0, ∞)
-	private static double F = 0.5;
+	private static double F = 1;
 	// crossover probability, tunable parameter between (0, 1)
 	private static double CR = 0.5;
 	
@@ -61,11 +61,11 @@ public class Project3Application {
 		for(int i = 0; i < size; i++){
 			MLPs[i] = new MultilayerPerceptron(nodeCounts, learningRate, momentum, inputVectors, true);
 		}
-		DifferentialEvolution de = new DifferentialEvolution(size, F, CR);
+		/*DifferentialEvolution de = new DifferentialEvolution(size, F, CR);
 		de.initPopulation(MLPs);
-		
-		/*GeneticAlgorithm ga = new GeneticAlgorithm(size, mutationRate, crossoverRate);
-		ga.initPopulation(MLPs);*/
+		*/
+		GeneticAlgorithm ga = new GeneticAlgorithm(size, mutationRate, crossoverRate);
+		ga.initPopulation(MLPs);
 		
 		/*EvolutionAlgorithm es = new EvolutionaryStrategy(mu,lambda,mutationRate,standardDeviation,alpha);
 		es.initPopulation(MLPs);*/
@@ -73,7 +73,7 @@ public class Project3Application {
 		//Runs 10 5x2 cross validation tests and sums the error
 		double sumCorrectPercent = 0;
 		for(int validation = 0; validation < 10; validation++){
-			sumCorrectPercent+=fiveByTwoCrossValidation(loadInputs(),de,(validation==4));
+			sumCorrectPercent+=fiveByTwoCrossValidation(loadInputs(),ga,(validation==4));
 		}
 		
 		//Averages the errors from the ten tests
