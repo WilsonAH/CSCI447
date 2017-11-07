@@ -1,4 +1,3 @@
-package evolution;
 //Author: Wilson Harris
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -22,83 +21,40 @@ public class Project3Application {
 	
 	
 	private static int dimensions = 42; //How many inputs are passed in
-	private static int inputVectors = /*67*/557; //How many arrays of inputs are tested
-	
+	private static int inputVectors = 67557; //How many arrays of inputs are tested
 	private static int possibleClassifications = 3; //If the problem is multiClass, the number of classifcations
-	
 	private static String fileName = "connect4.txt";
-	
-	private static int gradientBatchSize = 5;//How many inputs are trained on before updating weights
-	
+	private static int gradientBatchSize = 5;//How many inputs are trained on before updating weight
 	private static double learningRate = 0.5;
 	private static double momentum = 0.1;
+	private static int[] nodeCounts = {42,30,3};
 	
-	private static int mu = 1;
-	private static int lambda = 1;
-	private static double mutationRate = 0.1;
+	private static int mu = 10;
+	private static int lambda = 4;
+	private static double mutationRate = 0.5;
 	private static double standardDeviation = 0.5;
 	private static double alpha = 2;
-	
-	// variables for GA
-	// size of population
-	private static int size = 20;
-	// probability of crossover
-	private static double crossoverRate = 0.9;
-	
-	//variables for DE
-	// differential weight/scaling factor, tunable parameter between (0, ∞)
-	private static double F = 0.5;
-	// crossover probability, tunable parameter between (0, 1)
-	private static double CR = 0.5;
-	
+	private static int generationsPerTrain = 3;
 	
 	public static void main(String[] args){
-		//Constructs a mlp
-		int[] nodeCounts = {42,30,3};
-		
-		//Creates a MLP with the inputs MultilayerPerceptron(nodeCounts, learningrate, momentum, numberOfInputVectors, useLogisticOutputActivation)
-		MultilayerPerceptron[] MLPs = new MultilayerPerceptron[size];
-		for(int i = 0; i < size; i++){
+		//Creates MLPs with the inputs MultilayerPerceptron(nodeCounts, learningrate, momentum, numberOfInputVectors, useLogisticOutputActivation)
+		MultilayerPerceptron[] MLPs = new MultilayerPerceptron[mu];
+		for(int i = 0; i < mu; i++){
 			MLPs[i] = new MultilayerPerceptron(nodeCounts, learningRate, momentum, inputVectors, true);
 		}
-		DifferentialEvolution de = new DifferentialEvolution(size, F, CR);
-		de.initPopulation(MLPs);
 		
-		/*GeneticAlgorithm ga = new GeneticAlgorithm(size, mutationRate, crossoverRate);
-		ga.initPopulation(MLPs);*/
-		
-		/*EvolutionAlgorithm es = new EvolutionaryStrategy(mu,lambda,mutationRate,standardDeviation,alpha);
-		es.initPopulation(MLPs);*/
+		EvolutionAlgorithm es = new EvolutionaryStrategy(mu,lambda,mutationRate,standardDeviation,alpha,generationsPerTrain);
+		es.initPopulation(MLPs);
 		
 		//Runs 10 5x2 cross validation tests and sums the error
 		double sumCorrectPercent = 0;
 		for(int validation = 0; validation < 10; validation++){
-			sumCorrectPercent+=fiveByTwoCrossValidation(loadInputs(),de,(validation==4));
+			sumCorrectPercent+=fiveByTwoCrossValidation(loadInputs(),es,(validation==4));
 		}
 		
 		//Averages the errors from the ten tests
 		double totalAverageError = sumCorrectPercent/10;
 		System.out.println("Error: "+(totalAverageError*100));
-		
-		
-		//Commented out code is used to run smaller tests for debugging
-		/*double[][] inputs = loadInputs();
-		Random r = new Random();
-		for(int i = 0; i < inputVectors; i++){
-			double[] input = inputs[i%5];
-			double expected = rosenbrockFunction(input);
-			mlp.train(input, expected);
-			if(i%gradientBatchSize==0){
-				mlp.gradientDescent();
-			}
-		}
-		
-		for(int i = 0; i < 4; i++){
-			double in[] = inputs[r.nextInt(inputVectors-1)];
-			//System.out.println("Classifying "+xor[i][0]+","+xor[i][1]+". Output: "+mlp.classify(xor[i])[0]);
-			System.out.println("Classifying "+in[0]+","+in[1]+". Output: "+mlp.classify(in)[0]+". Expected: "+rosenbrockFunction(in));
-		}
-		mlp.graph();*/
 	}
 	
 	
@@ -138,10 +94,7 @@ public class Project3Application {
 		//Random generator used to shuffle the input data
 		Random r = new Random();
 		for(int loop = 0; loop < 5; loop++){
-			//Reset weights and point array
-			for(MultilayerPerceptron mlp: es.getPopulation()){
-				mlp.reset();
-			}
+			System.out.println("Testing round "+(loop+1));
 			
 			//Randomly Organize inputs
 			
@@ -182,8 +135,8 @@ public class Project3Application {
 					//If it is within the first 10% of the first half of inputs
 					if(input<firstValidationData.length){
 						//Copy the data into the validation data set
-						firstValidationData[input] = firstHalfInputs[input];
-						firstValidationExpected[input] = firstExpected[input];
+						firstValidationData[input] = inputs[input];
+						firstValidationExpected[input] = expected[input];
 					}else{
 						//Inputs
 						firstHalfInputs[input-firstValidationData.length] = inputs[input-firstValidationData.length];
@@ -196,8 +149,8 @@ public class Project3Application {
 					//If it is within the first 10% of the second half of inputs
 					if((input-(inputVectors/2))<secondValidationData.length){
 						//Copy the data into the validation data set
-						secondValidationData[input-(inputVectors/2)] = secondHalfInputs[input-(inputVectors/2)];
-						secondValidationExpected[input-(inputVectors/2)] = secondExpected[input-(inputVectors/2)];
+						secondValidationData[input-(inputVectors/2)] = inputs[input-(inputVectors/2)];
+						secondValidationExpected[input-(inputVectors/2)] = expected[input-(inputVectors/2)];
 					}else{
 						//Inputs
 						secondHalfInputs[input-(inputVectors/2)-secondValidationData.length] = inputs[input-(inputVectors/2)-secondValidationData.length];
@@ -209,26 +162,35 @@ public class Project3Application {
 			
 			
 			//********Train on the first half of data and test on the second half
+			//Reset weights and point array
+			es.train(firstValidationData, firstValidationExpected);
+			for(MultilayerPerceptron mlp: es.getPopulation()){
+				mlp.reset();
+			}
+			
 			
 			boolean isErrorDecreasing = true;//Boolean to see if error against validation set is decreasing
 			double[] lastErrors = new double[2];//Array used to check average error of last comparison against validation set
 			//While the input we are checking is less than the total data we have to train on and the error is decreasing against the validation set
+			System.out.println("First Half");
 			while(isErrorDecreasing){
+				
+				System.out.println("Error of best individual against test data: " + (es.test(secondHalfInputs,secondExpected)*100)+"%");
 				es.train(firstHalfInputs, firstExpected);
 				
 				lastErrors[1] = lastErrors[0];
-				//System.out.println(firstValidationData.length);
 				lastErrors[0] = es.test(firstValidationData,firstValidationExpected);
 				//If error has increased over the last two iterations.
-				//System.out.println(lastErrors[0]);
-				if(lastErrors[0]>=lastErrors[1]){// && lastErrors[1]!=0){
+				if(lastErrors[0]>=lastErrors[1] && lastErrors[1]!=0){
 					isErrorDecreasing = false;
 				}
 			}
+			System.out.println("Error of best individual against test data: " + (es.test(secondHalfInputs,secondExpected)*100)+"%");
+			
 			
 			//Graphs the error if this is the last run (We only want to graph once)
 			if(loop == 0 && isLastRun){
-				es.getPopulation()[0].graph();
+				//es.getPopulation()[0].graph();
 			}
 			
 			//Adds the error and expected output to the array used to store the averages.
@@ -246,16 +208,20 @@ public class Project3Application {
 			lastErrors = new double[4];
 			//While the input we are checking is less than the total data we have to train on and the error is decreasing against the validation set
 			//While the input we are checking is less than the total data we have to train on and the error is decreasing against the validation set
+			System.out.println("Second Half");
 			while(isErrorDecreasing){
+				System.out.println("Error of best individual against training data: " + es.test(firstHalfInputs, firstExpected));
 				es.train(secondHalfInputs, secondExpected);
 				
 				lastErrors[1] = lastErrors[0];
 				lastErrors[0] = es.test(secondValidationData,secondValidationExpected);
 				//If error has increased over the last two iterations.
-				if(lastErrors[0]>=lastErrors[1]){ //&& lastErrors[1]!=0){
+				if(lastErrors[0]>=lastErrors[1] && lastErrors[1]!=0){
 					isErrorDecreasing = false;
 				}
 			}
+			System.out.println("Error of best individual against training data: " + es.test(firstHalfInputs, firstExpected));
+			
 			
 			//Adds the error and expected output to the array used to store the averages.
 			correctPercent += es.test(firstHalfInputs,firstExpected);

@@ -1,5 +1,3 @@
-package evolution; 
-
 import java.util.Random;
 
 public class EvolutionaryStrategy extends EvolutionAlgorithm{
@@ -11,9 +9,10 @@ public class EvolutionaryStrategy extends EvolutionAlgorithm{
 	private double alpha;
 	private int offspring;
 	private int improvedOffspring;
+	private int generationsPerTrain;
 	
 	
-	public EvolutionaryStrategy(int mu, int lambda, double mutationRate, double standardDeviation, double alpha){
+	public EvolutionaryStrategy(int mu, int lambda, double mutationRate, double standardDeviation, double alpha, int generationsPerTrain){
 		this.mu = mu;
 		this.lambda = lambda;
 		this.mutationRate = mutationRate;
@@ -21,6 +20,7 @@ public class EvolutionaryStrategy extends EvolutionAlgorithm{
 		this.alpha = alpha;
 		this.offspring = 0;
 		this.improvedOffspring = 0;
+		this.generationsPerTrain = generationsPerTrain;
 		population = new MultilayerPerceptron[mu+lambda];
 		
 	}
@@ -32,7 +32,7 @@ public class EvolutionaryStrategy extends EvolutionAlgorithm{
 	}
 	
 	public void train(double[][] inputs, double[][] expected){
-		for(int index = 0; index < 10; index++){
+		for(int index = 0; index < generationsPerTrain; index++){
 			createNewGeneration(inputs, expected);
 			rankAndOrganize(inputs, expected);
 		}
@@ -54,13 +54,13 @@ public class EvolutionaryStrategy extends EvolutionAlgorithm{
 	private void createNewGeneration(double[][] inputs, double[][] expected){
 		Random r = new Random();
 		for(int offspring = 0; offspring < lambda; offspring++){
-			int parentPosition = r.nextInt(population.length-1);
+			int parentPosition = r.nextInt(population.length-lambda);
 			MultilayerPerceptron newOffSpring = population[parentPosition].createCopy();
 			mutate(newOffSpring);
 			population[mu+offspring] = newOffSpring;
 			
 			this.offspring++;
-			if(sumErrors(newOffSpring,inputs, expected)<sumErrors(population[parentPosition],inputs, expected)){
+			if(sumErrors(newOffSpring,inputs,expected)<sumErrors(population[parentPosition],inputs, expected)){
 				improvedOffspring++;
 			}
 		}
@@ -77,18 +77,18 @@ public class EvolutionaryStrategy extends EvolutionAlgorithm{
 	
 	private void mutate(MultilayerPerceptron mlp){
 		Random r = new Random();
-		double random = r.nextDouble();
 		double[][][] weights = mlp.getWeights();
-		if(random<=mutationRate){
-			for(int layer = 0; layer<weights.length;layer++){
-				for(int node = 0; node<weights[layer].length;node++){
-					for(int weight = 0; weight<weights[layer][node].length;weight++){
+		for(int layer = 0; layer<weights.length;layer++){
+			for(int node = 0; node<weights[layer].length;node++){
+				for(int weight = 0; weight<weights[layer][node].length;weight++){
+					double random = r.nextDouble();
+					if(random<=mutationRate){
 						weights[layer][node][weight] += standardDeviation*generateRandomGaussian();
-						//System.out.println(weights[layer][node][weight]);
 					}
+						//System.out.println(weights[layer][node][weight]);
 				}
-			}	
-		}
+			}
+		}	
 		mlp.setWeight(weights);
 	}
 	
@@ -106,7 +106,7 @@ public class EvolutionaryStrategy extends EvolutionAlgorithm{
 		double[] errors = population[0].test(inputs, expected);
 		double sumError=0;
 		for(double error: errors){
-			sumError+=error;
+			sumError+=Math.abs(error);
 		}
 		return sumError/errors.length;
 	}
@@ -117,7 +117,7 @@ public class EvolutionaryStrategy extends EvolutionAlgorithm{
 			double[] errors = population[individual].test(inputs, expected);
 			double sumError = 0;
 			for(double error: errors){
-				sumError += error;
+				sumError += Math.abs(error);
 			}
 			averageErrors[individual]=sumError/errors.length;
 		}
