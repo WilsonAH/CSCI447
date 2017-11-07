@@ -40,15 +40,15 @@ public class Project3Application {
 	
 	private static int mu = 1;
 	private static int lambda = 1;
-	private static double mutationRate = 0.5;
+	private static double mutationRate = 0.8;
 	private static double standardDeviation = 0.5;
 	private static double alpha = 2;
 	
 	// variables for GA include mutationRate above
 	// size of population
-	private static int size = 50;
+	private static int size = 20;
 	// probability of crossover
-	private static double crossoverRate = 0.9;
+	private static double crossoverRate = 0.5;
 	
 	//variables for DE include size above
 	// differential weight/scaling factor, tunable parameter between (0, ∞)
@@ -66,11 +66,11 @@ public class Project3Application {
 		for(int i = 0; i < size; i++){
 			MLPs[i] = new MultilayerPerceptron(nodeCounts, learningRate, momentum, inputVectors, true);
 		}
-		DifferentialEvolution de = new DifferentialEvolution(size, F, CR);
-		de.initPopulation(MLPs);
+		/*DifferentialEvolution de = new DifferentialEvolution(size, F, CR);
+		de.initPopulation(MLPs);*/
 		
-		/*GeneticAlgorithm ga = new GeneticAlgorithm(size, mutationRate, crossoverRate);
-		ga.initPopulation(MLPs);*/
+		GeneticAlgorithm ga = new GeneticAlgorithm(size, mutationRate, crossoverRate);
+		ga.initPopulation(MLPs);
 		
 		/*EvolutionAlgorithm es = new EvolutionaryStrategy(mu,lambda,mutationRate,standardDeviation,alpha);
 		es.initPopulation(MLPs);*/
@@ -79,7 +79,7 @@ public class Project3Application {
 		double sumCorrectPercent = 0;
 		for(int validation = 0; validation < 10; validation++){
 			// change the variable after loadInputs() to activate which evolution algorithm is used
-			sumCorrectPercent+=fiveByTwoCrossValidation(loadInputs(),de,(validation==4));
+			sumCorrectPercent+=fiveByTwoCrossValidation(loadInputs(),ga,(validation==4));
 		}
 		
 		//Averages the errors from the ten tests

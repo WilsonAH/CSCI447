@@ -117,17 +117,26 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 				ArrayList<Double> child1Array = parent1Array;
 				ArrayList<Double> child2Array = parent2Array;
 				// randomly select point for crossover
-				int point = rand.nextInt(parent1Array.size()-1);
+				int point1 = rand.nextInt(parent1Array.size()-1);
+				int point2 = rand.nextInt(parent1Array.size()-1);
+				if(point2 < point1) {
+					point1 = point2;
+					point2 = point1;
+				}
 				// replace all weights before point for one child with one
 				// parent's weights
-				for(int p = 0; p < point; p++) {
-					child1Array.set(i, parent2Array.get(i));
-					child2Array.set(i, parent1Array.get(i));
+				for(int p = 0; p < point1; p++) {
+					child1Array.set(p, parent2Array.get(p));
+					child2Array.set(p, parent1Array.get(p));
+				}
+				for(int p = point1; p < point2; p++) {
+					child1Array.set(p, parent1Array.get(p));
+					child2Array.set(p, parent2Array.get(p));
 				}
 				// replace weights after point with second parent's weights
-				for(int p = point; p < parent1Array.size(); p++) {
-					child1Array.set(i, parent1Array.get(i));
-					child2Array.set(i, parent2Array.get(i));
+				for(int p = point2; p < parent1Array.size(); p++) {
+					child1Array.set(p, parent1Array.get(p));
+					child2Array.set(p, parent2Array.get(p));
 				}
 				// put resulting weights back into the 3D weight array
 				int a = 0;
@@ -143,6 +152,12 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 				// add new children to the children population
 				children[i].setWeight(c1Weights);
 				children[i+1].setWeight(c2Weights);
+				if(individualFitness(p1, inputs, expected) < individualFitness(children[i], inputs, expected)) {
+					children[i] = p1;
+				}
+				if(individualFitness(p2, inputs, expected) < individualFitness(children[i+1], inputs, expected)) {
+					children[i+1] = p2;
+				}
 			}
 		}
 		// set the offspring population to the children created
@@ -158,24 +173,44 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 	 */
 	private MultilayerPerceptron tournamentSelection(double[][] inputs, double[][] expected) {
 		Random rand = new Random();
+		rankAndOrganize(inputs, expected);
 		MultilayerPerceptron parent;
 		// randomly select two choices for parents
-		int p1 = rand.nextInt(population.length-1);
+		int p1 = rand.nextInt(population.length/2-1);
 		int p2;
+		int p3;
+		int p4;
 		do {
-			p2 = rand.nextInt(population.length-1);
+			p2 = rand.nextInt(population.length/2-1);
 		} while (p1 == p2);
+		do {
+			p3 = rand.nextInt(population.length/2-2);
+		} while (p3 == p1 || p3 == p2);
+		do {
+			p4 = rand.nextInt(population.length/2-3);
+		} while (p4 == p1 || p4 == p2 || p4 == p3);
+		
 		MultilayerPerceptron choice1 = population[p1];
 		MultilayerPerceptron choice2 = population[p2];
+		MultilayerPerceptron choice3 = population[p3];
+		MultilayerPerceptron choice4 = population[p4];
 		// calculate error for each choice
 		double error1 = individualFitness(choice1, inputs, expected);
 		double error2 = individualFitness(choice2, inputs, expected);
+		double error3 = individualFitness(choice3, inputs, expected);
+		double error4 = individualFitness(choice4, inputs, expected);
 		// set parent individual to best of random choices
 		if(error1 < error2) {
 			parent = choice1;
 		}
 		else {
 			parent = choice2;
+		}
+		if(individualFitness(parent, inputs, expected) > error3) {
+			parent = choice3;
+		}
+		if(individualFitness(parent, inputs, expected) > error4) {
+			parent = choice4;
 		}
 		return parent;
 	}
