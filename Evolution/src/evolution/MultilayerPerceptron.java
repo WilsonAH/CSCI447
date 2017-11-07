@@ -264,13 +264,13 @@ public class MultilayerPerceptron{
 			double maxPercent = 0;
 			for(int n = 0; n < layers[layers.length-1].nodes.length;n++){
 				//Add the error and expected to their sum values
-				double perdiction = Math.abs(expect[n]-output[n]);
+				double prediction = Math.abs(expect[n]-output[n]);
 				if(expect.length>1){
 					if(expect[n] == 1){
 						correctPosition = n;
 					}
-					if(perdiction>maxPercent){
-						maxPercent=perdiction;
+					if(prediction>maxPercent){
+						maxPercent=prediction;
 						maxPosition = n;
 					}
 					sumExpected += Math.abs(expect[n]);

@@ -8,14 +8,19 @@ import java.util.Scanner;
 
 public class Project3Application {
 	/*Connect 4: 67557 input vectors, 42 dimensions, 42 input nodes, 3 output nodes, 3 possible classifications, true last input of MLP constructor, “connect4.txt”
-
+	Best backprop results with 2 hidden layers: 1 node each layer, momentum 0.5, learning rate 0.1
+	
 	Seismic: 2584 input vectors, 18 dimensions, 18 input nodes, 1 output node, 2 possible classifications, true last input of MLP constructor, “seismic.txt”
+	Best backprop results with 2 hidden layers: 1 node each layer, momentum 0.25, learning rate 0.1
 
 	TicTacToe: 958 input vectors, 9 dimensions, 9 input nodes, 1 output node, 2 possible classifications, true last input of MLP constructor, “tictactoe.txt”
+	Best backprop results with 1 hidden layer: 50 nodes, momentum 0.5, learning rate 0.1
 
 	Chess: 28056 input vectors, 6 dimensions, 6 input nodes, 17 output nodes, 17 possible classifications, true last input of MLP constructor, “chess.txt”
+	Best backprop results with 1 hidden layer: 5 nodes or 2 hidden layers: 1 node each layer, momentum 0.5, learning rate 0.1 for either
 
-	Poker: 1000000 input vectors, 10 dimensions, 10 input nodes, 10 output nodes, 10 possible classifications, true last input of MLP constructor, “poker.txt”*/
+	Poker: 1000000 input vectors, 10 dimensions, 10 input nodes, 10 output nodes, 10 possible classifications, true last input of MLP constructor, “poker.txt”
+	Best backprop results with 2 hidden layers: 1 node each layer, momentum 0.5, learning rate 0.01 */
 	
 	
 	
