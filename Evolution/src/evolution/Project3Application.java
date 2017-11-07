@@ -9,14 +9,19 @@ import java.util.Scanner;
 
 public class Project3Application {
 	/*Connect 4: 67557 input vectors, 42 dimensions, 42 input nodes, 3 output nodes, 3 possible classifications, true last input of MLP constructor, “connect4.txt”
-
+	Best backprop results with 2 hidden layers: 1 node each layer, momentum 0.5, learning rate 0.1
+	
 	Seismic: 2584 input vectors, 18 dimensions, 18 input nodes, 1 output node, 2 possible classifications, true last input of MLP constructor, “seismic.txt”
+	Best backprop results with 2 hidden layers: 1 node each layer, momentum 0.25, learning rate 0.1
 
 	TicTacToe: 958 input vectors, 9 dimensions, 9 input nodes, 1 output node, 2 possible classifications, true last input of MLP constructor, “tictactoe.txt”
+	Best backprop results with 1 hidden layer: 50 nodes, momentum 0.5, learning rate 0.1
 
 	Chess: 28056 input vectors, 6 dimensions, 6 input nodes, 17 output nodes, 17 possible classifications, true last input of MLP constructor, “chess.txt”
+	Best backprop results with 1 hidden layer: 5 nodes or 2 hidden layers: 1 node each layer, momentum 0.5, learning rate 0.1 for either
 
-	Poker: 1000000 input vectors, 10 dimensions, 10 input nodes, 10 output nodes, 10 possible classifications, true last input of MLP constructor, “poker.txt”*/
+	Poker: 1000000 input vectors, 10 dimensions, 10 input nodes, 10 output nodes, 10 possible classifications, true last input of MLP constructor, “poker.txt”
+	Best backprop results with 2 hidden layers: 1 node each layer, momentum 0.5, learning rate 0.01 */
 	
 	
 	
@@ -29,23 +34,23 @@ public class Project3Application {
 	private static String fileName = "connect4.txt";
 	
 	private static int gradientBatchSize = 5;//How many inputs are trained on before updating weights
-	
-	private static double learningRate = 0.5;
-	private static double momentum = 0.1;
+	// tunable parameters for MLP
+	private static double learningRate = 0.1;
+	private static double momentum = 0.5;
 	
 	private static int mu = 1;
 	private static int lambda = 1;
-	private static double mutationRate = 0.1;
+	private static double mutationRate = 0.5;
 	private static double standardDeviation = 0.5;
 	private static double alpha = 2;
 	
-	// variables for GA
+	// variables for GA include mutationRate above
 	// size of population
-	private static int size = 20;
+	private static int size = 50;
 	// probability of crossover
 	private static double crossoverRate = 0.9;
 	
-	//variables for DE
+	//variables for DE include size above
 	// differential weight/scaling factor, tunable parameter between (0, ∞)
 	private static double F = 1;
 	// crossover probability, tunable parameter between (0, 1)
@@ -54,18 +59,18 @@ public class Project3Application {
 	
 	public static void main(String[] args){
 		//Constructs a mlp
-		int[] nodeCounts = {42,30,3};
+		int[] nodeCounts = {42,1,1,3};
 		
 		//Creates a MLP with the inputs MultilayerPerceptron(nodeCounts, learningrate, momentum, numberOfInputVectors, useLogisticOutputActivation)
 		MultilayerPerceptron[] MLPs = new MultilayerPerceptron[size];
 		for(int i = 0; i < size; i++){
 			MLPs[i] = new MultilayerPerceptron(nodeCounts, learningRate, momentum, inputVectors, true);
 		}
-		/*DifferentialEvolution de = new DifferentialEvolution(size, F, CR);
+		DifferentialEvolution de = new DifferentialEvolution(size, F, CR);
 		de.initPopulation(MLPs);
-		*/
-		GeneticAlgorithm ga = new GeneticAlgorithm(size, mutationRate, crossoverRate);
-		ga.initPopulation(MLPs);
+		
+		/*GeneticAlgorithm ga = new GeneticAlgorithm(size, mutationRate, crossoverRate);
+		ga.initPopulation(MLPs);*/
 		
 		/*EvolutionAlgorithm es = new EvolutionaryStrategy(mu,lambda,mutationRate,standardDeviation,alpha);
 		es.initPopulation(MLPs);*/
@@ -73,7 +78,8 @@ public class Project3Application {
 		//Runs 10 5x2 cross validation tests and sums the error
 		double sumCorrectPercent = 0;
 		for(int validation = 0; validation < 10; validation++){
-			sumCorrectPercent+=fiveByTwoCrossValidation(loadInputs(),ga,(validation==4));
+			// change the variable after loadInputs() to activate which evolution algorithm is used
+			sumCorrectPercent+=fiveByTwoCrossValidation(loadInputs(),de,(validation==4));
 		}
 		
 		//Averages the errors from the ten tests

@@ -12,12 +12,11 @@ public class DifferentialEvolution extends EvolutionAlgorithm {
 	private MultilayerPerceptron[] population;
 	private MultilayerPerceptron[] offspring;
 	MultilayerPerceptron[] generation;
-	private int size;
 	// differential weight/scaling factor, tunable parameter between (0, ∞)
 	private double F;
 	// crossover probability, tunable parameter between (0, 1)
 	private double CR;
-	
+	private int g = 0;
 	/**
 	 * Constructor to initialize DE algorithm
 	 */
@@ -44,14 +43,16 @@ public class DifferentialEvolution extends EvolutionAlgorithm {
 	 * after mutation and crossover.
 	 */
 	public void evolveOneGeneration(double[][] inputs, double[][] expected) {
-		rankAndOrganize(inputs, expected);
-		// get error of current population
-		double[] averageErrors = generationFitness(inputs, expected);
-		System.out.println("Error = " + averageErrors[0]);
+		
+		System.out.println("Evolving Generation  " + g);
 		// create new array to hold next generation and crossover current population
 		generation = crossOver(inputs, expected); 
 		// update population with new generation
 		this.population = generation;
+		rankAndOrganize(inputs, expected);
+		// get error of current population
+		//double[] averageErrors = generationFitness(inputs, expected);
+		g++;
 	}
 	public void train(double[][] inputs, double[][] expected) {
 		for(int index = 0; index < 10; index++){
@@ -315,10 +316,6 @@ public class DifferentialEvolution extends EvolutionAlgorithm {
 	 * @return population of MLPs
 	 */
 	public MultilayerPerceptron[] getPopulation() {
-		MultilayerPerceptron[] MLPs = new MultilayerPerceptron[size];
-		for(int i = 0; i < size; i++){
-			MLPs[i] = this.population[i];
-		}
-		return MLPs;
+		return this.population;
 	}
 }
