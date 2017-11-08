@@ -1,4 +1,3 @@
-package evolution;
 //Author: Wilson Harris
 
 public class Synapse {

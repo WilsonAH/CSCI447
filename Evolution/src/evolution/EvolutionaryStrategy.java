@@ -102,13 +102,8 @@ public class EvolutionaryStrategy extends EvolutionAlgorithm{
 	
 	
 	public double test(double[][] inputs, double expected[][]){
-		this.rankAndOrganize(inputs, expected);
-		double[] errors = population[0].test(inputs, expected);
-		double sumError=0;
-		for(double error: errors){
-			sumError+=Math.abs(error);
-		}
-		return sumError/errors.length;
+		double error = population[0].test(inputs, expected)[0];
+		return error;
 	}
 	
 	private void rankAndOrganize(double[][] inputs, double expected[][]){

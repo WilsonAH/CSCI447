@@ -1,4 +1,3 @@
-package evolution;
 //Author: Wilson Harris
 //Credit to tutorial by Andreas Thiele for basic structure of algorithm
 import java.lang.Math;
@@ -264,13 +263,13 @@ public class MultilayerPerceptron{
 			double maxPercent = 0;
 			for(int n = 0; n < layers[layers.length-1].nodes.length;n++){
 				//Add the error and expected to their sum values
-				double prediction = Math.abs(expect[n]-output[n]);
+				double perdiction = Math.abs(expect[n]-output[n]);
 				if(expect.length>1){
 					if(expect[n] == 1){
 						correctPosition = n;
 					}
-					if(prediction>maxPercent){
-						maxPercent=prediction;
+					if(perdiction>maxPercent){
+						maxPercent=perdiction;
 						maxPosition = n;
 					}
 					sumExpected += Math.abs(expect[n]);
@@ -295,8 +294,7 @@ public class MultilayerPerceptron{
 			//Average the error and expected value
 			sumExpected/=layers[layers.length-1].nodes.length;
 		}
-		//System.out.println((correct-inputs.length)+" "+inputs.length);
-		double[] averages = {(inputs.length-correct)/inputs.length,sumExpected/inputs.length};
+		double[] averages = {(inputs.length-correct)/inputs.length};
 		return averages;
 	}
 	

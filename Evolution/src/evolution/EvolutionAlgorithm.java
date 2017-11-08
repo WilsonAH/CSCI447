@@ -1,4 +1,3 @@
-package evolution;
 
 public abstract class EvolutionAlgorithm {
 	public abstract void initPopulation(MultilayerPerceptron[] MLPs);

@@ -12,13 +12,10 @@ public class Project3Application {
 	
 	Seismic: 2584 input vectors, 18 dimensions, 18 input nodes, 1 output node, 2 possible classifications, true last input of MLP constructor, “seismic.txt”
 	Best backprop results with 2 hidden layers: 1 node each layer, momentum 0.25, learning rate 0.1
-
 	TicTacToe: 958 input vectors, 9 dimensions, 9 input nodes, 1 output node, 2 possible classifications, true last input of MLP constructor, “tictactoe.txt”
 	Best backprop results with 1 hidden layer: 50 nodes, momentum 0.5, learning rate 0.1
-
 	Chess: 28056 input vectors, 6 dimensions, 6 input nodes, 17 output nodes, 17 possible classifications, true last input of MLP constructor, “chess.txt”
 	Best backprop results with 1 hidden layer: 5 nodes or 2 hidden layers: 1 node each layer, momentum 0.5, learning rate 0.1 for either
-
 	Poker: 1000000 input vectors, 10 dimensions, 10 input nodes, 10 output nodes, 10 possible classifications, true last input of MLP constructor, “poker.txt”
 	Best backprop results with 2 hidden layers: 1 node each layer, momentum 0.5, learning rate 0.01 */
 	
@@ -29,7 +26,6 @@ public class Project3Application {
 	private static int inputVectors = 67557; //How many arrays of inputs are tested
 	private static int possibleClassifications = 3; //If the problem is multiClass, the number of classifcations
 	private static String fileName = "connect4.txt";
-	private static int gradientBatchSize = 5;//How many inputs are trained on before updating weight
 	private static double learningRate = 0.5;
 	private static double momentum = 0.1;
 	private static int[] nodeCounts = {42,30,3};
@@ -52,13 +48,13 @@ public class Project3Application {
 		es.initPopulation(MLPs);
 		
 		//Runs 10 5x2 cross validation tests and sums the error
-		double sumCorrectPercent = 0;
+		double sumCorrectError = 0;
 		for(int validation = 0; validation < 10; validation++){
-			sumCorrectPercent+=fiveByTwoCrossValidation(loadInputs(),es,(validation==4));
+			sumCorrectError+=fiveByTwoCrossValidation(loadInputs(),es,(validation==4));
 		}
 		
 		//Averages the errors from the ten tests
-		double totalAverageError = sumCorrectPercent/10;
+		double totalAverageError = sumCorrectError/10;
 		System.out.println("Error: "+(totalAverageError*100));
 	}
 	
@@ -168,29 +164,31 @@ public class Project3Application {
 			
 			//********Train on the first half of data and test on the second half
 			//Reset weights and point array
-			es.train(firstValidationData, firstValidationExpected);
+			//es.train(firstValidationData, firstValidationExpected);
 			for(MultilayerPerceptron mlp: es.getPopulation()){
 				mlp.reset();
 			}
 			
-			
+			boolean firstRun = true;
 			boolean isErrorDecreasing = true;//Boolean to see if error against validation set is decreasing
 			double[] lastErrors = new double[2];//Array used to check average error of last comparison against validation set
 			//While the input we are checking is less than the total data we have to train on and the error is decreasing against the validation set
 			System.out.println("First Half");
 			while(isErrorDecreasing){
 				
-				System.out.println("Error of best individual against test data: " + (es.test(secondHalfInputs,secondExpected)*100)+"%");
+				//System.out.println("Error of best individual against test data: " + (es.test(secondHalfInputs,secondExpected)*100)+"%");
 				es.train(firstHalfInputs, firstExpected);
 				
 				lastErrors[1] = lastErrors[0];
 				lastErrors[0] = es.test(firstValidationData,firstValidationExpected);
+				System.out.println("Error of best individual against validation set: " + (lastErrors[0]*100)+"%");
+				
 				//If error has increased over the last two iterations.
-				if(lastErrors[0]>=lastErrors[1] && lastErrors[1]!=0){
+				if(lastErrors[0]>=lastErrors[1] && !firstRun){
 					isErrorDecreasing = false;
 				}
+				firstRun = false;
 			}
-			System.out.println("Error of best individual against test data: " + (es.test(secondHalfInputs,secondExpected)*100)+"%");
 			
 			
 			//Graphs the error if this is the last run (We only want to graph once)
@@ -200,6 +198,7 @@ public class Project3Application {
 			
 			//Adds the error and expected output to the array used to store the averages.
 			double correctPercent = es.test(secondHalfInputs, secondExpected);
+			System.out.println("Error of best individual against test data: " + (correctPercent*100));
 			
 			
 			//********Train on the second half of data and test on the first half
@@ -209,27 +208,32 @@ public class Project3Application {
 			}
 			
 			//resets variables
+			firstRun = true;
 			isErrorDecreasing = true;
 			lastErrors = new double[4];
 			//While the input we are checking is less than the total data we have to train on and the error is decreasing against the validation set
 			//While the input we are checking is less than the total data we have to train on and the error is decreasing against the validation set
 			System.out.println("Second Half");
 			while(isErrorDecreasing){
-				System.out.println("Error of best individual against training data: " + es.test(firstHalfInputs, firstExpected));
 				es.train(secondHalfInputs, secondExpected);
 				
 				lastErrors[1] = lastErrors[0];
 				lastErrors[0] = es.test(secondValidationData,secondValidationExpected);
+				
+				System.out.println("Error of best individual against Validation Data: " + (lastErrors[0]*100)+"%");
+				
 				//If error has increased over the last two iterations.
-				if(lastErrors[0]>=lastErrors[1] && lastErrors[1]!=0){
+				if(lastErrors[0]>=lastErrors[1] && !firstRun){
 					isErrorDecreasing = false;
 				}
+				firstRun = false;
 			}
-			System.out.println("Error of best individual against training data: " + es.test(firstHalfInputs, firstExpected));
 			
 			
 			//Adds the error and expected output to the array used to store the averages.
-			correctPercent += es.test(firstHalfInputs,firstExpected);
+			double correctPercent2 = es.test(firstHalfInputs,firstExpected);
+			System.out.println("Error of best individual against test data: " + (correctPercent2*100));
+			correctPercent += correctPercent2;
 			sumCorrectPercent+=correctPercent/2;
 		}
 		//Averages the error and expected over the 5 tests
