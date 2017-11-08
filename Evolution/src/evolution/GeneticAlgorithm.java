@@ -41,9 +41,9 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 	 */
 	public void evolveOneGeneration(double[][] inputs, double[][] expected) {
 		rankAndOrganize(inputs, expected);
-		// call mutate function for population
-		crossOver(inputs, expected);
 		// call crossover function
+		crossOver(inputs, expected);
+		// call mutate function for population
 		mutate(inputs, expected);
 		// find fitness of current population
 		rankAndOrganize(inputs, expected);
@@ -61,12 +61,12 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 		offspring = population;
 		// rand variable for probability of mutation
 		Random rand = new Random();
-		// randMut variable to create real values for mutation of weights
-		double randMut = new Random().nextDouble();
 		for (int i = 0; i < offspring.length; i++) {
 			// get current weights for current individual
 			double[][][] weights = offspring[i].getWeights();
 			// for each of the weights in the array
+			// create range for real mutation values
+			
 			for (int l = 0; l < weights.length; l++) {
 				for (int n = 0; n < weights[l].length; n++) {
 					for (int s = 0; s < weights[l][n].length; s++) {
@@ -74,7 +74,9 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 						double mut = rand.nextDouble();
 						// mutate current weight if mut is true
 						if (mut < mutationRate) {
-							// create range for real mutation values
+							// randMut variable to create real values for mutation of weights
+							double randMut = new Random().nextDouble();
+							// create mutator value
 							double mutator = (MUTSTART) + (randMut * MUTEND - MUTSTART);
 							// calculate new weight based on real mutation value
 							double mutWeight = weights[l][n][s] + mutator;
@@ -152,19 +154,19 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 				// add new children to the children population
 				children[i].setWeight(c1Weights);
 				children[i+1].setWeight(c2Weights);
-				if(individualFitness(p1, inputs, expected) < individualFitness(children[i], inputs, expected)) {
-					children[i] = p1;
-				}
-				if(individualFitness(p2, inputs, expected) < individualFitness(children[i+1], inputs, expected)) {
-					children[i+1] = p2;
-				}
+				
 			}
 		}
-		// set the offspring population to the children created
-		offspring = children;
+		for(int i = 0; i < offspring.length; i++) {
+			double parentFitness = individualFitness(offspring[i], inputs, expected);
+			double childFitness = individualFitness(children[i], inputs, expected);
+			if( parentFitness > childFitness) {
+				offspring[i] = children[i];
+			}
+		}
 	}
 	/**
-	 * tournamentSelection method to randomly select 2 parents and return the most fit
+	 * tournamentSelection method to randomly select 4 parents and return the most fit
 	 * as one parent for crossover
 	 * 
 	 * @param inputs
@@ -175,7 +177,7 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 		Random rand = new Random();
 		rankAndOrganize(inputs, expected);
 		MultilayerPerceptron parent;
-		// randomly select two choices for parents
+		// randomly select four choices for parents
 		int p1 = rand.nextInt(population.length/2-1);
 		int p2;
 		int p3;
@@ -214,6 +216,14 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 		}
 		return parent;
 	}
+	/**
+	 * individualFitness method to calculate fitness of one MLP
+	 * 
+	 * @param mlp
+	 * @param inputs
+	 * @param expected
+	 * @return fitness value for an individual
+	 */
 	private double individualFitness(MultilayerPerceptron mlp, double[][] inputs, double[][] expected){
 		double[] errors = mlp.test(inputs, expected);
 		double individualFitness = 0;
