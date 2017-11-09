@@ -79,7 +79,7 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 				double[][][] c1W = p1W;
 				double[][][] c2W = p2W;
 				// for each layer in the MLP, cross half to each child
-				for(int l = 0; l < 2; l++) {
+				for(int layer = 0; layer < 2; layer++) {
 					for(int n = 0; n < p1W[l].length; n++) {
 						for(int w = 0; w < p1W[l][n].length; w++) {
 							c1W[l][n][w] = p2W[l][n][w];
@@ -87,7 +87,7 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 						}
 					}
 				}
-				for(int l = 2; l < p1W.length; l++) {
+				for(int layer = 2; layer < p1W.length; layer++) {
 					for(int n = 0; n < p1W[l].length; n++) {
 						for(int w = 0; w < p1W[l][n].length; w++) {
 							c1W[l][n][w] = p1W[l][n][w];
