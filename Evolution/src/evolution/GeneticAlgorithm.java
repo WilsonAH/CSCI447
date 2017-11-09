@@ -52,8 +52,8 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 	 */
 	private void createNewGeneration(double[][] inputs, double[][] expected){
 		crossover(inputs, expected);
-		for(int i = 0; i < offspring.length; i++){
-			mutate(offspring[i]);
+		for(int i = 0; i < population.length; i++){
+			mutate(population[i]);
 		}
 	}
 	/**
