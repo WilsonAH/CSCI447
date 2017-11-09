@@ -4,89 +4,56 @@ import java.util.ArrayList;
 import java.util.Random;
 
 /**
- * @author laura sullivan-russett
+ * @author laura sullivan-russett, wilson harris
  * @version November 13, 2017
  *
  */
 public class GeneticAlgorithm extends EvolutionAlgorithm {
 	private MultilayerPerceptron[] population;
 	private MultilayerPerceptron[] offspring;
+	// tunable mutation and crossover parameters
 	private double mutationRate;
 	private double crossoverRate;
-	private final double MUTSTART = -0.1;
-	private final double MUTEND = 0.1;
+	// bounds for random mutation value
+	private final double MUTSTART = -0.5;
+	private final double MUTEND = 0.5;
+	// tunable population size
+	private int size;
 
 	public GeneticAlgorithm(int size, double mutationRate, double crossoverRate) {
+		this.size = size;
 		this.population = new MultilayerPerceptron[size];
 		this.offspring = new MultilayerPerceptron[size]; 
 		this.crossoverRate = crossoverRate;
 		this.mutationRate = mutationRate;
 	}
 	/**
-	 * initPopulation method to initialize the starting population
+	 * initPopulation method to initialize the population
 	 * 
-	 * @param MLPs
+	 * @param input MLP array
 	 */
-	public void initPopulation(MultilayerPerceptron[] MLPs) {
-		for (int individual = 0; individual < MLPs.length; individual++) {
+	public void initPopulation(MultilayerPerceptron[] MLPs){
+		for(int individual = 0; individual < size; individual++){
 			population[individual] = MLPs[individual];
 		}
-		offspring = population;
+	}
+	
+	public void train(double[][] inputs, double[][] expected){
+		for(int index = 0; index < 3; index++){
+			createNewGeneration(inputs, expected);
+			rankAndOrganize(inputs, expected);
+		}
 	}
 	/**
-	 * evolveOneGeneration method to evolve and replace the population
+	 * createOneGeneration method to evolve and replace the population
 	 * 
 	 * @param inputs
 	 * @param expected
 	 */
-	public void evolveOneGeneration(double[][] inputs, double[][] expected) {
-		rankAndOrganize(inputs, expected);
-		// call crossover function
-		crossOver(inputs, expected);
-		// call mutate function for population
-		mutate(inputs, expected);
-		// find fitness of current population
-		rankAndOrganize(inputs, expected);
-		double[] tempAvg = generationFitness(inputs, expected);
-		// print fitness of best individual
-		System.out.println("Best Individual Error = " + tempAvg[0]);
-	}
-	
-	/**
-	 * mutate method to mutate individuals in the population
-	 * 
-	 * @param current population
-	 */
-	public void mutate(double[][] inputs, double[][] expected) {
-		offspring = population;
-		// rand variable for probability of mutation
-		Random rand = new Random();
-		for (int i = 0; i < offspring.length; i++) {
-			// get current weights for current individual
-			double[][][] weights = offspring[i].getWeights();
-			// for each of the weights in the array
-			// create range for real mutation values
-			
-			for (int l = 0; l < weights.length; l++) {
-				for (int n = 0; n < weights[l].length; n++) {
-					for (int s = 0; s < weights[l][n].length; s++) {
-						// mutate each weight with mutationRate probability
-						double mut = rand.nextDouble();
-						// mutate current weight if mut is true
-						if (mut < mutationRate) {
-							// randMut variable to create real values for mutation of weights
-							double randMut = new Random().nextDouble();
-							// create mutator value
-							double mutator = (MUTSTART) + (randMut * MUTEND - MUTSTART);
-							// calculate new weight based on real mutation value
-							double mutWeight = weights[l][n][s] + mutator;
-							weights[l][n][s] = mutWeight;
-						}
-					}
-				}
-			}
-			// update weights for individual
-			offspring[i].setWeight(weights);
+	private void createNewGeneration(double[][] inputs, double[][] expected){
+		crossover(inputs, expected);
+		for(int i = 0; i < offspring.length; i++){
+			mutate(offspring[i]);
 		}
 	}
 	/**
@@ -96,74 +63,46 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 	 * @param parents
 	 * @return children
 	 */
-	public void crossOver(double[][] inputs, double[][] expected) {
+	private void crossover(double[][] inputs, double[][] expected) {
+		offspring = population;
 		Random rand = new Random();
-		MultilayerPerceptron[] children = offspring; 
-		for(int i = 0; i < offspring.length; i += 2) {
-			MultilayerPerceptron p1 = tournamentSelection(inputs, expected);
-			MultilayerPerceptron p2 = tournamentSelection(inputs, expected);
-			// get current weights for parents
-			double[][][] p1Weights = p1.getWeights();
-			double[][][] p2Weights = p2.getWeights();
-			children[i] = p1;
-			children[i+1] = p2;
-			// randCo variable for probability of crossover between current parents
-			double randCO = rand.nextDouble();
-			// new arrays for children's weights
-			double[][][] c1Weights = p1Weights;
-			double[][][] c2Weights = p2Weights;
-			// initiate crossover with crossoverRate probability
-			if (randCO <= crossoverRate) {
-				ArrayList<Double> parent1Array = toArray(p1Weights);
-				ArrayList<Double> parent2Array = toArray(p2Weights);
-				ArrayList<Double> child1Array = parent1Array;
-				ArrayList<Double> child2Array = parent2Array;
-				// randomly select point for crossover
-				int point1 = rand.nextInt(parent1Array.size()-1);
-				int point2 = rand.nextInt(parent1Array.size()-1);
-				if(point2 < point1) {
-					point1 = point2;
-					point2 = point1;
-				}
-				// replace all weights before point for one child with one
-				// parent's weights
-				for(int p = 0; p < point1; p++) {
-					child1Array.set(p, parent2Array.get(p));
-					child2Array.set(p, parent1Array.get(p));
-				}
-				for(int p = point1; p < point2; p++) {
-					child1Array.set(p, parent1Array.get(p));
-					child2Array.set(p, parent2Array.get(p));
-				}
-				// replace weights after point with second parent's weights
-				for(int p = point2; p < parent1Array.size(); p++) {
-					child1Array.set(p, parent1Array.get(p));
-					child2Array.set(p, parent2Array.get(p));
-				}
-				// put resulting weights back into the 3D weight array
-				int a = 0;
-				for (int l = 0; l < c1Weights.length; l++) {
-					for (int n = 0; n < c1Weights[l].length; n++) {
-						for (int s = 0; s < c1Weights[l][n].length; s++) {
-							c1Weights[l][n][s] = child1Array.get(a);
-							c2Weights[l][n][s] = child2Array.get(a);
-							a++;
+		// for each pair of individuals in the population, create 2 offspring
+		for(int i = 0; i < size; i+=2) {
+			double cross = rand.nextDouble();
+			if(cross < crossoverRate) {
+				// choose 2 parents from the population using tournament selection
+				MultilayerPerceptron parent1 = tournamentSelection(inputs, expected);
+				MultilayerPerceptron parent2 = tournamentSelection(inputs, expected);
+				// get weights of parents for crossover
+				double[][][] p1W = parent1.getWeights();
+				double[][][] p2W = parent2.getWeights();
+				double[][][] c1W = p1W;
+				double[][][] c2W = p2W;
+				// for each layer in the MLP, cross half to each child
+				for(int l = 0; l < 2; l++) {
+					for(int n = 0; n < p1W[l].length; n++) {
+						for(int w = 0; w < p1W[l][n].length; w++) {
+							c1W[l][n][w] = p2W[l][n][w];
+							c2W[l][n][w] = p1W[l][n][w];
 						}
 					}
 				}
-				// add new children to the children population
-				children[i].setWeight(c1Weights);
-				children[i+1].setWeight(c2Weights);
-				
+				for(int l = 2; l < p1W.length; l++) {
+					for(int n = 0; n < p1W[l].length; n++) {
+						for(int w = 0; w < p1W[l][n].length; w++) {
+							c1W[l][n][w] = p1W[l][n][w];
+							c2W[l][n][w] = p2W[l][n][w];
+						}
+					}
+				}
+				// set the new weights of the offspring
+				offspring[i].setWeight(c1W);
+				offspring[i+1].setWeight(c2W);
 			}
 		}
-		for(int i = 0; i < offspring.length; i++) {
-			double parentFitness = individualFitness(offspring[i], inputs, expected);
-			double childFitness = individualFitness(children[i], inputs, expected);
-			if( parentFitness > childFitness) {
-				offspring[i] = children[i];
-			}
-		}
+		// replace the population with the offspring
+		this.population = offspring;
+		
 	}
 	/**
 	 * tournamentSelection method to randomly select 4 parents and return the most fit
@@ -175,15 +114,14 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 	 */
 	private MultilayerPerceptron tournamentSelection(double[][] inputs, double[][] expected) {
 		Random rand = new Random();
-		rankAndOrganize(inputs, expected);
 		MultilayerPerceptron parent;
 		// randomly select four choices for parents
-		int p1 = rand.nextInt(population.length/2-1);
+		int p1 = rand.nextInt(population.length-1);
 		int p2;
 		int p3;
 		int p4;
 		do {
-			p2 = rand.nextInt(population.length/2-1);
+			p2 = rand.nextInt(population.length-1);
 		} while (p1 == p2);
 		do {
 			p3 = rand.nextInt(population.length/2-2);
@@ -197,10 +135,10 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 		MultilayerPerceptron choice3 = population[p3];
 		MultilayerPerceptron choice4 = population[p4];
 		// calculate error for each choice
-		double error1 = individualFitness(choice1, inputs, expected);
-		double error2 = individualFitness(choice2, inputs, expected);
-		double error3 = individualFitness(choice3, inputs, expected);
-		double error4 = individualFitness(choice4, inputs, expected);
+		double error1 = sumErrors(choice1, inputs, expected);
+		double error2 = sumErrors(choice2, inputs, expected);
+		double error3 = sumErrors(choice3, inputs, expected);
+		double error4 = sumErrors(choice4, inputs, expected);
 		// set parent individual to best of random choices
 		if(error1 < error2) {
 			parent = choice1;
@@ -208,111 +146,85 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 		else {
 			parent = choice2;
 		}
-		if(individualFitness(parent, inputs, expected) > error3) {
+		if(sumErrors(parent, inputs, expected) > error3) {
 			parent = choice3;
 		}
-		if(individualFitness(parent, inputs, expected) > error4) {
+		if(sumErrors(parent, inputs, expected) > error4) {
 			parent = choice4;
 		}
+		// return best MLP as the parent
 		return parent;
 	}
 	/**
-	 * individualFitness method to calculate fitness of one MLP
+	 * sumErrors method to get the sum of errors of an MLP
 	 * 
 	 * @param mlp
 	 * @param inputs
 	 * @param expected
-	 * @return fitness value for an individual
+	 * @return sum of errors
 	 */
-	private double individualFitness(MultilayerPerceptron mlp, double[][] inputs, double[][] expected){
+	private double sumErrors(MultilayerPerceptron mlp, double[][] inputs, double[][] expected){
 		double[] errors = mlp.test(inputs, expected);
-		double individualFitness = 0;
-		for(double error: errors){
-			individualFitness+=error;
-		}
-		return individualFitness;
-	}
-	/**
-	 * generationFitness method to determine the fitness of each individual MLP by determining
-	 * the error in classification
-	 * 
-	 * @param inputs
-	 * @param expected
-	 * @return array of fitness values of individuals
-	 */
-	public double[] generationFitness(double[][] inputs, double[][] expected) {
-		double[] averageErrors = new double[this.population.length];
-		// for each individual in the population, test its classification and record the error
-		for(int individual = 0; individual < this.population.length; individual++){
-			double[] errors = population[individual].test(inputs, expected);
-			double sumError = 0;
-			for(double error: errors){
-				sumError += error;
-			}
-			// average the error for each individual
-			averageErrors[individual]=sumError/errors.length;
-		}
-		return averageErrors;
-	}
-	/**
-	 * sumGenerationFitness method to add up the error for each individual
-	 * and get the average of the population
-	 * 
-	 * @param averageErrors
-	 * @return average fitness of generation
-	 */
-	public double sumGenerationFitness(double[] averageErrors) {
-		double average = 0;
-		// for each individual in the population, sum the error
-		for(int i = 0; i < population.length; i++) {
-			average += averageErrors[i];
-		}
-		average = average/population.length;
-		return average;
-	}
-	public  void train(double inputs[][], double expected[][]) {
-		for(int index = 0; index < 10; index++){
-			rankAndOrganize(inputs, expected);
-			evolveOneGeneration(inputs, expected);
-		}
-	}
-	public  double test(double inputs[][], double expected[][]) {
-		double[] errors = population[0].test(inputs, expected);
-		double sumError=0;
+		double sumError = 0;
 		for(double error: errors){
 			sumError+=error;
 		}
-		return sumError/errors.length;
+		return sumError;
 	}
 	/**
-	 * averageGenerationFitness method to get the average fitness of the entire
-	 * population
+	 * mutate method to mutate individuals in the population
 	 * 
-	 * @param averageErrors
-	 * @return average fitness of the population
+	 * @param current population
 	 */
-	public double averageGenerationFitness(double[] averageErrors) {
-		double average = 0;
-		// for each individual in the population, sum the error
-		for(int i = 0; i < population.length; i++) {
-			average += averageErrors[i];
-		}
-		average = average/population.length;
-		return average;
+	private void mutate(MultilayerPerceptron mlp){
+		Random r = new Random();
+		double[][][] weights = mlp.getWeights();
+		// for each weight in the chromosome
+		for(int layer = 0; layer<weights.length;layer++){
+			for(int node = 0; node<weights[layer].length;node++){
+				for(int weight = 0; weight<weights[layer][node].length;weight++){
+					double random = r.nextDouble();
+					if(random<=mutationRate){
+						double randMut = new Random().nextDouble();
+						// create mutator value
+						double mutator = (MUTSTART) + (randMut * MUTEND - MUTSTART);
+						// calculate new weight based on real mutation value
+						double mutWeight = weights[layer][node][weight] + mutator;
+						weights[layer][node][weight] = mutWeight;
+					}
+				}
+			}
+		}	
+		// set the weights after mutation
+		mlp.setWeight(weights);
 	}
+	
+	public double test(double[][] inputs, double expected[][]){
+		this.rankAndOrganize(inputs, expected);
+		double[] errors = population[0].test(inputs, expected);
+		double sumError=0;
+		for(double error: errors){
+			sumError+=Math.abs(error);
+		}
+		return sumError/errors.length;
+	}
+	
 	private void rankAndOrganize(double[][] inputs, double expected[][]){
 		double[] averageErrors = new double[this.population.length];
 		for(int individual = 0; individual < this.population.length; individual++){
 			double[] errors = population[individual].test(inputs, expected);
 			double sumError = 0;
 			for(double error: errors){
-				sumError += error;
+				sumError += Math.abs(error);
 			}
 			averageErrors[individual]=sumError/errors.length;
 		}
 		
 		quickSort(population, averageErrors, 0, population.length);
 	}
+	
+	
+	
 	private void quickSort(MultilayerPerceptron[] unsortedPopulation, double[] errors, int low, int high){
 		if ((high-low)<2){
 			return;
@@ -348,30 +260,12 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 		unsortedPopulation[lowIndex] = fenceMLP;
 		return lowIndex;
 	}
-	/**
-	 * toArray helper method to convert 3D weight array into an ArrayList
-	 * 
-	 * @param weights
-	 * @return ArrayList of weights
-	 */
-	private ArrayList<Double> toArray(double[][][] weights) {
-		ArrayList<Double> weightArray = new ArrayList<Double>();
-		// for each weight in the 3D array, add to ArrayList
-		for (int l = 0; l < weights.length; l++) {
-			for (int n = 0; n < weights[l].length; n++) {
-				for (int s = 0; s < weights[l][n].length; s++) {
-					weightArray.add(weights[l][n][s]);
-				}
-			}
+
+	public MultilayerPerceptron[] getPopulation() {
+		MultilayerPerceptron[] MLPs = new MultilayerPerceptron[size];
+		for(int i = 0; i < size; i++){
+			MLPs[i] = this.population[i];
 		}
-		return weightArray;
-	}
-	/**
-	 * getPopulation method to return population
-	 * 
-	 * @return population of MLPs
-	 */
-	public  MultilayerPerceptron[] getPopulation() {
-		return this.population;
+		return MLPs;
 	}
 }
