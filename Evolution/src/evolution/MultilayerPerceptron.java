@@ -1,3 +1,5 @@
+package evolution;
+
 //Author: Wilson Harris
 //Credit to tutorial by Andreas Thiele for basic structure of algorithm
 import java.lang.Math;

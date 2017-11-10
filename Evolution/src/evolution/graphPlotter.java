@@ -1,3 +1,5 @@
+package evolution;
+
 //Graphing Function taken Website: https://www.java-forums.org/new-java/7995-how-plot-graph-java-given-samples.html
 import java.awt.Color;
 import java.awt.Graphics;

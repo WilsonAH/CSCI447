@@ -1,3 +1,5 @@
+package evolution;
+
 //Author: Wilson Harris
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -22,13 +24,13 @@ public class Project3Application {
 	
 	
 	
-	private static int dimensions = 42; //How many inputs are passed in
-	private static int inputVectors = 67557; //How many arrays of inputs are tested
-	private static int possibleClassifications = 3; //If the problem is multiClass, the number of classifcations
-	private static String fileName = "connect4.txt";
-	private static double learningRate = 0.5;
-	private static double momentum = 0.1;
-	private static int[] nodeCounts = {42,30,3};
+	private static int dimensions = 6; //How many inputs are passed in
+	private static int inputVectors = 28056; //How many arrays of inputs are tested
+	private static int possibleClassifications = 17; //If the problem is multiClass, the number of classifcations
+	private static String fileName = "chess.txt";
+	private static double learningRate = 0.3;
+	private static double momentum = 0.2;
+	private static int[] nodeCounts = {6,30,17};
 	
 	private static int mu = 10;
 	private static int lambda = 4;
@@ -49,12 +51,12 @@ public class Project3Application {
 		
 		//Runs 10 5x2 cross validation tests and sums the error
 		double sumCorrectError = 0;
-		for(int validation = 0; validation < 10; validation++){
+		for(int validation = 0; validation < 5; validation++){
 			sumCorrectError+=fiveByTwoCrossValidation(loadInputs(),es,(validation==4));
 		}
 		
 		//Averages the errors from the ten tests
-		double totalAverageError = sumCorrectError/10;
+		double totalAverageError = sumCorrectError/5;
 		System.out.println("Error: "+(totalAverageError*100));
 	}
 	
@@ -249,7 +251,7 @@ public class Project3Application {
 		ArrayList<double[]> inputsList = new ArrayList<double[]>();
 		BufferedReader br = null;
 		try {
-			br = new BufferedReader(new FileReader("data/"+fileName));
+			br = new BufferedReader(new FileReader("./Evolution/Data/"+fileName));
 		} catch (FileNotFoundException e) {
 			System.out.println("Arrrg, there was an error loading the file, matey.");
 			System.exit(0);
