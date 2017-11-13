@@ -20,6 +20,9 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 	// tunable population size
 	private int size;
 
+	/**
+	 * Constructor to initialize GA algorithm
+	 */
 	public GeneticAlgorithm(int size, double mutationRate, double crossoverRate) {
 		this.size = size;
 		this.population = new MultilayerPerceptron[size];
@@ -37,7 +40,9 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 			population[individual] = MLPs[individual];
 		}
 	}
-	
+	/**
+	 * train method to evolve generations for use with MLP
+	 */
 	public void train(double[][] inputs, double[][] expected){
 		for(int index = 0; index < 3; index++){
 			createNewGeneration(inputs, expected);
@@ -79,7 +84,7 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 				double[][][] c1W = p1W;
 				double[][][] c2W = p2W;
 				// for each layer in the MLP, cross half to each child
-				for(int layer = 0; layer < 2; layer++) {
+				for(int l = 0; l < p1W.length/2; l++) {
 					for(int n = 0; n < p1W[l].length; n++) {
 						for(int w = 0; w < p1W[l][n].length; w++) {
 							c1W[l][n][w] = p2W[l][n][w];
@@ -87,7 +92,7 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 						}
 					}
 				}
-				for(int layer = 2; layer < p1W.length; layer++) {
+				for(int l = p1W.length/2; l < p1W.length; l++) {
 					for(int n = 0; n < p1W[l].length; n++) {
 						for(int w = 0; w < p1W[l][n].length; w++) {
 							c1W[l][n][w] = p1W[l][n][w];
@@ -102,7 +107,6 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 		}
 		// replace the population with the offspring
 		this.population = offspring;
-		
 	}
 	/**
 	 * tournamentSelection method to randomly select 4 parents and return the most fit
@@ -198,7 +202,9 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 		// set the weights after mutation
 		mlp.setWeight(weights);
 	}
-	
+	/**
+	 * test method to test error rate of current best individual
+	 */
 	public double test(double[][] inputs, double expected[][]){
 		this.rankAndOrganize(inputs, expected);
 		double[] errors = population[0].test(inputs, expected);
@@ -208,7 +214,12 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 		}
 		return sumError/errors.length;
 	}
-	
+	/**
+	 * rankAndOrganize method to sort individuals by fitness
+	 * 
+	 * @param inputs
+	 * @param expected
+	 */
 	private void rankAndOrganize(double[][] inputs, double expected[][]){
 		double[] averageErrors = new double[this.population.length];
 		for(int individual = 0; individual < this.population.length; individual++){
@@ -222,9 +233,9 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 		
 		quickSort(population, averageErrors, 0, population.length);
 	}
-	
-	
-	
+	/**
+	 * quickSort method to aid in sorting population by fitness
+	 */
 	private void quickSort(MultilayerPerceptron[] unsortedPopulation, double[] errors, int low, int high){
 		if ((high-low)<2){
 			return;
@@ -233,6 +244,15 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 		quickSort(unsortedPopulation, errors, low, fenceIndex);
 		quickSort(unsortedPopulation, errors, fenceIndex+1, high);
 	}
+	/**
+	 * partition helper method to aid quickSort
+	 * 
+	 * @param unsortedPopulation
+	 * @param errors
+	 * @param low
+	 * @param high
+	 * @return
+	 */
 	private int partition(MultilayerPerceptron[] unsortedPopulation, double[] errors, int low, int high){
 		double fence = errors[low];
 		MultilayerPerceptron fenceMLP = unsortedPopulation[low];
@@ -260,7 +280,11 @@ public class GeneticAlgorithm extends EvolutionAlgorithm {
 		unsortedPopulation[lowIndex] = fenceMLP;
 		return lowIndex;
 	}
-
+	/**
+	 * getPopulation method to return population
+	 * 
+	 * @return population of MLPs
+	 */
 	public MultilayerPerceptron[] getPopulation() {
 		MultilayerPerceptron[] MLPs = new MultilayerPerceptron[size];
 		for(int i = 0; i < size; i++){
