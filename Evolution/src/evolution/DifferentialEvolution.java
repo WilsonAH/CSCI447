@@ -17,6 +17,7 @@ public class DifferentialEvolution extends EvolutionAlgorithm {
 	// crossover probability, tunable parameter between (0, 1)
 	private double CR;
 	private int g = 0;
+	
 	/**
 	 * Constructor to initialize DE algorithm
 	 */
@@ -43,17 +44,17 @@ public class DifferentialEvolution extends EvolutionAlgorithm {
 	 * after mutation and crossover.
 	 */
 	public void evolveOneGeneration(double[][] inputs, double[][] expected) {
-		
-		System.out.println("Evolving Generation  " + g);
+		System.out.println("Evolving Generation " + g);
 		// create new array to hold next generation and crossover current population
 		generation = crossOver(inputs, expected); 
 		// update population with new generation
 		this.population = generation;
 		rankAndOrganize(inputs, expected);
-		// get error of current population
-		//double[] averageErrors = generationFitness(inputs, expected);
 		g++;
 	}
+	/**
+	 * train method to evolve generations for use with MLP
+	 */
 	public void train(double[][] inputs, double[][] expected) {
 		for(int index = 0; index < 10; index++){
 			evolveOneGeneration(inputs, expected);
@@ -61,9 +62,15 @@ public class DifferentialEvolution extends EvolutionAlgorithm {
 		}
 		
 	}
+	/**
+	 * test method to test error rate of current best individual
+	 */
 	public double test(double[][] inputs, double[][] expected) {
+		// sort the population by error rate
 		this.rankAndOrganize(inputs, expected);
+		// test the best individual
 		double[] errors = population[0].test(inputs, expected);
+		// add up the errors of the weights of the individual
 		double sumError=0;
 		for(double error: errors){
 			sumError+=error;
@@ -149,7 +156,7 @@ public class DifferentialEvolution extends EvolutionAlgorithm {
 					}
 				}
 			}
-			// set the new individuals weights after crossover
+			// set the new individual's weights after crossover
 			offspring[i].setWeight(trial);
 			// calculate fitness of parent and child
 			double parentError = individualFitness(population[i], inputs, expected);
@@ -197,6 +204,9 @@ public class DifferentialEvolution extends EvolutionAlgorithm {
 		agents[2] = population[select];
 		return agents;
 	}
+	/**
+	 * individualFitness method to calculate the error rate (fitness) of an individual MLP
+	 */
 	private double individualFitness(MultilayerPerceptron mlp, double[][] inputs, double[][] expected){
 		double[] errors = mlp.test(inputs, expected);
 		double individualFitness = 0;
@@ -221,6 +231,12 @@ public class DifferentialEvolution extends EvolutionAlgorithm {
 		average = average/population.length;
 		return average;
 	}
+	/**
+	 * rankAndOrganize method to sort individuals by fitness
+	 * 
+	 * @param inputs
+	 * @param expected
+	 */
 	private void rankAndOrganize(double[][] inputs, double expected[][]){
 		double[] averageErrors = new double[this.population.length];
 		for(int individual = 0; individual < this.population.length; individual++){
@@ -234,7 +250,9 @@ public class DifferentialEvolution extends EvolutionAlgorithm {
 		
 		quickSort(population, averageErrors, 0, population.length);
 	}
-
+	/**
+	 * quickSort method to aid in sorting population by fitness
+	 */
 	private void quickSort(MultilayerPerceptron[] unsortedPopulation, double[] errors, int low, int high){
 		if ((high-low)<2){
 			return;
@@ -243,6 +261,15 @@ public class DifferentialEvolution extends EvolutionAlgorithm {
 		quickSort(unsortedPopulation, errors, low, fenceIndex);
 		quickSort(unsortedPopulation, errors, fenceIndex+1, high);
 	}
+	/**
+	 * partition helper method to aid quickSort
+	 * 
+	 * @param unsortedPopulation
+	 * @param errors
+	 * @param low
+	 * @param high
+	 * @return
+	 */
 	private int partition(MultilayerPerceptron[] unsortedPopulation, double[] errors, int low, int high){
 		double fence = errors[low];
 		MultilayerPerceptron fenceMLP = unsortedPopulation[low];
