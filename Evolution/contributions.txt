@@ -1,0 +1,14 @@
+John Blixt
+Wilson Harris
+Laura Sullivan-Russett
+
+Machine Learning Project 3 Contributions
+
+John ran all of the Evolution Algorithms experiments and wrote the Experiments sections of the final paper.
+
+Wilson wrote the MLP and backpropagation algorithms along with the Evolution Strategy algorithm.  He wrote the algorithm and 
+implementation sections of the paper and the initial hypotheses.  He contributed to the problem statement, results and algorithm behavior 
+sections of the final paper.
+
+Laura wrote the Genetic Algorithm and Differential Evolution.  She ran the MLP tests and wrote the abstract, summary 
+and GA and DE sections of the paper.  She contributed to the problem statement, algorithm behavior and summary.
